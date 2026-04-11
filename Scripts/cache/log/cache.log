@@ -1,0 +1,33 @@
+2026/04/06 10:38:40 kid1| storeDirWriteCleanLogs: Starting...
+2026/04/06 10:38:40 kid1|   Finished.  Wrote 0 entries.
+2026/04/06 10:38:40 kid1|   Took 0.00 seconds (  0.00 entries/sec).
+2026/04/06 10:38:40 kid1| logfileRotate: stdio:/var/log/squid/readable.log
+2026/04/06 10:38:40 kid1| Rotate log file stdio:/var/log/squid/readable.log
+2026/04/06 10:38:40 kid1| Pinger socket opened on FD 13
+2026/04/06 10:38:40 pinger| Initialising ICMP pinger ...
+2026/04/06 10:38:40 pinger| ICMP socket opened.
+2026/04/06 10:38:40 pinger| ICMPv6 socket opened
+2026/04/06 11:11:12 kid1| Logfile: opening log stdio:/var/spool/squid/netdb.state
+2026/04/06 11:11:12 kid1| Logfile: closing log stdio:/var/spool/squid/netdb.state
+2026/04/06 11:11:12 kid1| NETDB state saved; 0 entries, 0 msec
+2026/04/06 12:04:41 kid1| Logfile: opening log stdio:/var/spool/squid/netdb.state
+2026/04/06 12:04:41 kid1| Logfile: closing log stdio:/var/spool/squid/netdb.state
+2026/04/06 12:04:41 kid1| NETDB state saved; 0 entries, 0 msec
+2026/04/06 12:34:36 pinger| SendEcho ERROR: sending to ICMPv6 packet to [2a04:4e42:31::347]: (101) Network is unreachable
+2026/04/06 12:35:03 pinger| SendEcho ERROR: sending to ICMPv6 packet to [2404:6800:4003:c02::77]: (101) Network is unreachable
+2026/04/06 12:35:12 pinger| SendEcho ERROR: sending to ICMPv6 packet to [2600:140f:201:10::1737:eb0b]: (101) Network is unreachable
+2026/04/06 12:35:14 pinger| SendEcho ERROR: sending to ICMPv6 packet to [2001:4860:4829:7700::]: (101) Network is unreachable
+2026/04/06 12:35:16 pinger| SendEcho ERROR: sending to ICMPv6 packet to [2606:4700::6812:1c77]: (101) Network is unreachable
+2026/04/06 12:35:21 pinger| SendEcho ERROR: sending to ICMPv6 packet to [2404:6800:4007:815::2002]: (101) Network is unreachable
+2026/04/06 12:35:24 pinger| SendEcho ERROR: sending to ICMPv6 packet to [2606:4700:10::6814:28de]: (101) Network is unreachable
+2026/04/06 12:35:40 pinger| SendEcho ERROR: sending to ICMPv6 packet to [2406:2600:7:100::3]: (101) Network is unreachable
+2026/04/06 12:46:55 pinger| SendEcho ERROR: sending to ICMPv6 packet to [2404:6800:4007:82f::200e]: (101) Network is unreachable
+2026/04/06 13:00:13 pinger| SendEcho ERROR: sending to ICMPv6 packet to [2a04:4e42:31::347]: (101) Network is unreachable
+2026/04/06 13:01:30 pinger| SendEcho ERROR: sending to ICMPv6 packet to [2001:4860:4827:7700::]: (101) Network is unreachable
+2026/04/06 13:01:41 pinger| SendEcho ERROR: sending to ICMPv6 packet to [2404:6800:4007:831::200e]: (101) Network is unreachable
+2026/04/06 13:01:47 pinger| SendEcho ERROR: sending to ICMPv6 packet to [2404:6800:4007:830::2008]: (101) Network is unreachable
+2026/04/06 13:02:00 pinger| SendEcho ERROR: sending to ICMPv6 packet to [2404:6800:4007:83b::2003]: (101) Network is unreachable
+2026/04/06 13:03:28 kid1| Logfile: opening log stdio:/var/spool/squid/netdb.state
+2026/04/06 13:03:28 kid1| Logfile: closing log stdio:/var/spool/squid/netdb.state
+2026/04/06 13:03:28 kid1| NETDB state saved; 46 entries, 9 msec
+2026/04/06 13:05:13 pinger| SendEcho ERROR: sending to ICMPv6 packet to [2a04:4e42:31::347]: (101) Network is unreachable
