@@ -1,5 +1,4 @@
 #!/bin/bash
-# Usage: ./block_site.sh example.com
 
 if [ -z "$1" ]; then
     echo "Usage: $0 domain"
@@ -7,11 +6,12 @@ if [ -z "$1" ]; then
 fi
 
 DOMAIN=$1
+FILE="/home/ashraful/Desktop/Coding_Nerdy_Stuffs/SmartGate/proxy/blocked_sites.txt"
 
-# Add to blocked list if not already present
-grep -qx "$DOMAIN" /home/ashraful/Desktop/Coding_Nerdy_Stuffs/SmartGate/proxy/blocked_sites.txt || echo "$DOMAIN" | sudo tee -a /home/ashraful/Desktop/Coding_Nerdy_Stuffs/SmartGate/proxy/blocked_sites.txt
+# Add domain safely
+grep -qx "$DOMAIN" "$FILE" || echo "$DOMAIN" >> "$FILE"
 
-# Reload Squid
+# Reload squid (NO sudo password prompt version)
 sudo systemctl reload squid
 
 echo "Blocked $DOMAIN"

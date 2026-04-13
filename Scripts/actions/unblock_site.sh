@@ -1,5 +1,4 @@
 #!/bin/bash
-# Usage: ./unblock_site.sh example.com
 
 if [ -z "$1" ]; then
     echo "Usage: $0 domain"
@@ -7,11 +6,14 @@ if [ -z "$1" ]; then
 fi
 
 DOMAIN=$1
+FILE="/home/ashraful/Desktop/Coding_Nerdy_Stuffs/SmartGate/proxy/blocked_sites.txt"
 
-# Remove domain from blocked list
-sudo sed -i "/^$DOMAIN$/d" /home/ashraful/Desktop/Coding_Nerdy_Stuffs/SmartGate/proxy/blocked_sites.txt
+# Remove domain from list
+if [ -f "$FILE" ]; then
+    grep -v "^$DOMAIN$" "$FILE" > /tmp/blocked_tmp.txt && mv /tmp/blocked_tmp.txt "$FILE"
+fi
 
-# Reload Squid
+# Reload squid (no interactive prompt if sudo is configured properly)
 sudo systemctl reload squid
 
 echo "Unblocked $DOMAIN"

@@ -2,5 +2,5 @@
 #!/bin/bash
 # usage: ./restart_squid.sh
 
-sudo systemctl start squid
+systemctl start squid
 echo "Squid Started"
