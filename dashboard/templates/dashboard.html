@@ -4,6 +4,15 @@
     <meta charset="UTF-8" />
     <title>SmartGate Proxy Dashboard</title>
 
+    <div id="introOverlay">
+      <video id="introVideo" autoplay muted>
+        <source
+          src="{{ url_for('static', filename='video/intro.mp4') }}"
+          type="video/mp4"
+        />
+      </video>
+    </div>
+
     <style>
       /* RESET */
       * {
@@ -19,6 +28,18 @@
         color: #eee;
         min-height: 100vh;
         overflow-x: hidden;
+      }
+
+      #introOverlay {
+        position: fixed;
+        inset: 0;
+        background: black;
+        z-index: 9999;
+      }
+      #introVideo {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
       }
 
       /* SIDEBAR */
@@ -223,6 +244,17 @@
     </div>
 
     <script>
+      if (sessionStorage.getItem('introPlayed')) {
+        document.getElementById('introOverlay').style.display = 'none';
+      }
+
+      const video = document.getElementById('introVideo');
+
+      video.onended = () => {
+        sessionStorage.setItem('introPlayed', 'yes');
+        document.getElementById('introOverlay').style.display = 'none';
+      };
+
       function log(msg) {
         if (!msg) return;
         document.getElementById('consoleBox').innerText += msg + '\n';
