@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Proxy Admin Panel</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family: Arial;
+}
+
+body{
+    background:#0b0b0b;
+    color:#eee;
+    display:flex;
+}
+
+/* Sidebar */
+.sidebar{
+    width:230px;
+    height:100vh;
+    background:#111;
+    position:fixed;
+    padding-top:20px;
+    border-right:2px solid #ff7a00;
+}
+
+.sidebar h2{
+    color:#ff7a00;
+    text-align:center;
+    margin-bottom:25px;
+}
+
+.sidebar a{
+    display:block;
+    padding:12px 20px;
+    color:#ccc;
+    text-decoration:none;
+}
+
+.sidebar a:hover{
+    background:#ff7a00;
+    color:#000;
+}
+
+/* Main */
+.main{
+    margin-left:230px;
+    padding:25px;
+    width:100%;
+}
+
+.topbar{
+    background:#111;
+    padding:15px 20px;
+    border:1px solid #ff7a00;
+    margin-bottom:20px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:12px;
+}
+
+.topbar-info{
+    color:#eee;
+}
+
+.top-controls{
+    display:flex;
+    gap:10px;
+}
+
+.top-controls button{
+    padding:10px 20px;
+    font-size:16px;
+    background:#ff7a00;
+    border:none;
+    cursor:pointer;
+    font-weight:bold;
+}
+
+/* Status */
+.status{
+    color:#ff7a00;
+}
+
+/* Cards */
+.cards{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:15px;
+    margin-bottom:25px;
+}
+
+.card{
+    background:#111;
+    padding:15px;
+    border:1px solid #ff7a00;
+}
+
+.card h3{
+    color:#ff7a00;
+}
+
+/* Sections */
+section{
+    background:#111;
+    padding:20px;
+    margin-bottom:30px;
+    border:1px solid #ff7a00;
+}
+
+section h2{
+    color:#ff7a00;
+    margin-bottom:15px;
+}
+
+/* Table */
+table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+th, td{
+    border:1px solid #333;
+    padding:8px;
+}
+
+th{
+    color:#ff7a00;
+}
+
+/* Inputs */
+input, button{
+    padding:6px;
+    margin:5px 0;
+}
+
+button{
+    background:#ff7a00;
+    border:none;
+    cursor:pointer;
+    font-weight:bold;
+}
+
+/* Logs */
+.logs-box{
+    background:#000;
+    color:#0f0;
+    padding:10px;
+    height:200px;
+    overflow-y:auto;
+    font-size:13px;
+    border:1px solid #ff7a00;
+    font-family: monospace;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="sidebar">
+    <h2>Proxy Panel</h2>
+    <a href="#dashboard">Dashboard</a>
+    <a href="#live">Live Traffic</a>
+    <a href="#acl">ACL</a>
+    <a href="#logs">Live Logs</a>
+    <a href="#time">Time Rules</a>
+    <a href="#category">Categories</a>
+    <a href="#reports">Reports</a>
+    <a href="#settings">Settings</a>
+</div>
+
+<div class="main">
+
+    <div class="topbar">
+        <div class="topbar-info">
+            Squid Status: <span class="status">Running</span> |
+            Active Clients: 24 |
+            Time Rule: Active
+        </div>
+
+        <div class="top-controls">
+            <button>Start</button>
+            <button>Restart</button>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <section id="dashboard">
+        <h2>Dashboard</h2>
+        <div class="cards">
+            <div class="card">
+                <h3>Total Requests</h3>
+                <p>3250</p>
+            </div>
+            <div class="card">
+                <h3>Blocked Requests</h3>
+                <p>780</p>
+            </div>
+            <div class="card">
+                <h3>Most Active User</h3>
+                <p>Lab-PC-12</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Live Traffic -->
+    <section id="live">
+        <h2>Live Traffic</h2>
+        <table>
+            <tr>
+                <th>Time</th>
+                <th>Domain</th>
+                <th>Status</th>
+            </tr>
+            <tr>
+                <td>10:32</td>
+                <td>facebook.com</td>
+                <td>BLOCKED</td>
+            </tr>
+        </table>
+    </section>
+
+    <!-- ACL -->
+    <section id="acl">
+        <h2>Access Control (ACL)</h2>
+        <input type="text" placeholder="Enter domain">
+        <button>Add</button>
+    </section>
+
+    <!-- REAL-TIME LOGS -->
+    <section id="logs">
+        <h2>Real-Time Logs</h2>
+        <div class="logs-box">
+            [10:31] ACCESS google.com ALLOWED<br>
+            [10:32] ACCESS facebook.com BLOCKED<br>
+            [10:32] ACCESS chat.openai.com ALLOWED<br>
+            [10:33] ACCESS youtube.com BLOCKED<br>
+        </div>
+    </section>
+
+    <!-- Time Rules -->
+    <section id="time">
+        <h2>Time Rules</h2>
+        <table>
+            <tr>
+                <th>Rule</th>
+                <th>Start</th>
+                <th>End</th>
+            </tr>
+            <tr>
+                <td>Social Block</td>
+                <td>08:00</td>
+                <td>16:00</td>
+            </tr>
+        </table>
+    </section>
+
+    <!-- Categories -->
+    <section id="category">
+        <h2>Category Blocking</h2>
+        <label><input type="checkbox"> AI sites</label><br>
+        <label><input type="checkbox"> Social Media</label><br>
+        <label><input type="checkbox"> Gaming</label><br>
+        <label><input type="checkbox"> Streaming</label><br>
+        <label><input type="checkbox"> Adult</label><br>
+    </section>
+
+    <!-- Reports -->
+    <section id="reports">
+        <h2>Reports</h2>
+        <button>Generate Daily PDF</button>
+        <button>Generate Weekly Excel</button>
+    </section>
+
+    <!-- Settings -->
+    <section id="settings">
+        <h2>Settings</h2>
+        <button>Restart Squid</button>
+        <button>Clear Cache</button>
+    </section>
+
+</div>
+
+</body>
+</html>
