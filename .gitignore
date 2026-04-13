@@ -2,7 +2,5 @@ BackUpDir/
 dashboard/venv/
 dashboard/templates/dashboard.html.backup
 .prettierrc
-package-lock.json
-package.json
-node_modules/
+
 .gitignore
