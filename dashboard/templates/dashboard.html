@@ -123,6 +123,53 @@
         padding: 4px 0;
         color: #ccc;
       }
+
+      /* MOBILE-FIRST FIX */
+      @media (max-width: 768px) {
+        .sidebar {
+          position: fixed;
+          left: 0;
+          top: 0;
+          height: 100vh;
+          width: 260px;
+
+          transform: translateX(-105%);
+          transition: transform 0.25s ease;
+
+          z-index: 9999;
+        }
+
+        .sidebar.active {
+          transform: translateX(0);
+        }
+
+        .main {
+          margin-left: 0 !important;
+          padding: 12px;
+        }
+
+        .toggle-btn {
+          display: block;
+        }
+
+        /* FIX BUTTON LAYOUT */
+        button {
+          width: 100%;
+          margin: 6px 0;
+        }
+
+        /* FIX INPUT OVERFLOW */
+        input {
+          width: 100%;
+        }
+
+        /* STACK BUTTON GROUPS CLEANLY */
+        section {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+      }
     </style>
   </head>
 
@@ -141,6 +188,10 @@
       <!-- CONTROLS -->
       <section id="controls">
         <h2>Squid Controls</h2>
+        <div id="squidStatus" style="margin-top: 10px; font-weight: bold">
+          Status: <span id="statusText">Loading...</span>
+        </div>
+        <br />
         <button onclick="start()">Start</button>
         <button onclick="stop()">Stop</button>
         <button onclick="restart()">Restart</button>
@@ -251,6 +302,31 @@
           .map((x) => `<li>${x}</li>`)
           .join('');
       }
+
+      /* REFRESH STATUS */
+      async function refreshStatus() {
+        let r = await fetch('/squid/status');
+        let d = await r.json();
+
+        let el = document.getElementById('statusText');
+
+        if (d.status === 'active') {
+          el.innerText = 'ACTIVE';
+          el.style.color = '#00ff66';
+        } else if (d.status === 'inactive') {
+          el.innerText = 'INACTIVE';
+          el.style.color = 'red';
+        } else {
+          el.innerText = 'UNKNOWN';
+          el.style.color = 'orange';
+        }
+      }
+
+      window.onload = function () {
+        refreshStatus();
+      };
+
+      setInterval(refreshStatus, 3000);
 
       loadList();
     </script>

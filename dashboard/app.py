@@ -111,5 +111,26 @@ def logs():
     return jsonify({"logs": LOGS})
 
 
+ # ---------------- REFRESH STATUS ----------------
+@app.route("/squid/status")
+def squid_status():
+    result = subprocess.run(
+        ["systemctl", "is-active", "squid"],
+        capture_output=True,
+        text=True
+    )
+
+    status = result.stdout.strip()
+
+    if status == "active":
+        state = "active"
+    elif status == "inactive":
+        state = "inactive"
+    else:
+        state = "unknown"
+
+    return jsonify({"status": state})
+
+
 if __name__ == "__main__":
     app.run(debug=True)
