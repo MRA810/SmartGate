@@ -1,2 +1,4 @@
 BackUpDir/
 dashboard/venv/
+dashboard/templates/dashboard.html.backup
+.prettierrc

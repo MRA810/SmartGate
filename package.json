@@ -1,0 +1,23 @@
+{
+  "devDependencies": {
+    "prettier": "^3.8.2"
+  },
+  "name": "smartgate",
+  "description": "**SmartGate** is a full-featured, Linux-based network gateway management system built around [Squid Proxy](http://www.squid-cache.org/). It combines transparent web filtering, time-based access control, DHCP enforcement, firewall lockdown, a Flask web dashboard, and automated reporting — all deployable on a single Ubuntu gateway machine.",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MRA810/SmartGate.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/MRA810/SmartGate/issues"
+  },
+  "homepage": "https://github.com/MRA810/SmartGate#readme"
+}
