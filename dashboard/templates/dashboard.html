@@ -4,17 +4,19 @@
     <meta charset="UTF-8" />
     <title>SmartGate Proxy Dashboard</title>
 
-    <div id="introOverlay">
-      <video id="introVideo" autoplay muted>
-        <source
-          src="{{ url_for('static', filename='video/intro.mp4') }}"
-          type="video/mp4"
-        />
-      </video>
-    </div>
-
     <style>
-      /* RESET */
+      :root {
+        --bg: #000000;
+        --surface-1: #000000;
+        --surface-2: #050505;
+        --border: #444444;
+        --text-primary: #ffffff;
+        --text-secondary: #ffffff;
+        --accent: #ff7a00;
+        --accent-strong: #ffffff;
+        --success: #00ff66;
+      }
+
       * {
         margin: 0;
         padding: 0;
@@ -22,180 +24,158 @@
         font-family: Arial, sans-serif;
       }
 
-      /* BODY (IMPORTANT: NO FLEX) */
       body {
-        background: #0b0b0b;
-        color: #eee;
+        background: var(--bg);
+        color: var(--text-primary);
         min-height: 100vh;
         overflow-x: hidden;
       }
 
-      #introOverlay {
-        position: fixed;
-        inset: 0;
-        background: black;
-        z-index: 9999;
-      }
-      #introVideo {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-      }
-
-      /* SIDEBAR */
       .sidebar {
         position: fixed;
         top: 0;
         left: 0;
         width: 230px;
         height: 100vh;
-
-        background: #111;
-        border-right: 2px solid #ff7a00;
-
+        background: var(--surface-1);
+        border-right: 4px solid var(--accent);
         padding-top: 20px;
         z-index: 1000;
       }
 
       .sidebar h2 {
-        color: #ff7a00;
+        color: var(--accent);
         text-align: center;
-        margin-bottom: 20px;
+        margin-bottom: 25px;
+        letter-spacing: 1px;
+        font-weight: 900;
       }
 
       .sidebar a {
         display: block;
-        padding: 12px 20px;
-        color: #ccc;
+        padding: 14px 22px;
+        color: var(--text-secondary);
         text-decoration: none;
-        transition: 0.2s;
+        border-left: 4px solid transparent;
+        transition: 0.1s;
+        font-weight: bold;
       }
 
       .sidebar a:hover {
-        background: #ff7a00;
+        background: var(--accent);
         color: #000;
+        border-left: 4px solid #fff;
       }
 
-      /* MAIN CONTENT */
       .main {
         margin-left: 230px;
-        padding: 20px;
+        padding: 24px;
       }
 
-      /* SECTIONS */
       section {
-        background: #111;
-        padding: 20px;
-        margin-bottom: 20px;
-        border: 1px solid #222;
-        border-left: 3px solid #ff7a00;
+        background: var(--surface-2);
+        padding: 22px;
+        margin-bottom: 22px;
+        border: 2px solid var(--border);
+        border-left: 6px solid var(--accent);
       }
 
       h2 {
-        color: #ff7a00;
-        margin-bottom: 10px;
+        color: var(--accent);
+        margin-bottom: 12px;
+        text-transform: uppercase;
+        font-size: 1.2rem;
       }
 
-      /* BUTTONS */
       button {
-        background: #ff7a00;
-        border: none;
-        padding: 8px 12px;
-        margin: 5px 5px 5px 0;
+        background: var(--accent);
+        color: #000;
+        border: 2px solid var(--accent);
+        padding: 10px 18px;
+        margin: 6px 6px 6px 0;
         cursor: pointer;
-        font-weight: bold;
-        border-radius: 4px;
+        font-weight: 900;
+        border-radius: 0px;
+        transition: 0.1s;
+        text-transform: uppercase;
       }
 
       button:hover {
-        background: #ff8f2a;
+        background: var(--accent-strong);
+        border-color: #ffffff;
+        color: #000;
       }
 
-      /* INPUTS */
       input {
-        padding: 8px;
+        padding: 10px;
         background: #000;
         color: #fff;
-        border: 1px solid #333;
+        border: 2px solid #ffffff;
         margin-right: 8px;
+        font-weight: bold;
       }
 
-      /* CONSOLE */
-      .console {
+      input:focus {
+        outline: 3px solid var(--accent);
+        border-color: var(--accent);
+      }
+
+      .console-wrap {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+      }
+
+      .console,
+      .log-console {
         background: #000;
-        color: #00ff66;
         height: 260px;
         overflow-y: auto;
-        padding: 10px;
-        font-family: monospace;
-        border: 1px solid #333;
+        padding: 12px;
+        font-family: 'Courier New', monospace;
+        border: 2px solid #ffffff;
         white-space: pre-line;
+        font-size: 0.95rem;
       }
 
-      /* LIST */
+      .console {
+        color: var(--success);
+      }
+
+      .log-console {
+        color: #ffffff;
+      }
+
       ul {
         list-style: none;
-        padding: 10px;
+        padding: 12px;
         background: #000;
-        border: 1px solid #333;
+        border: 2px solid var(--border);
       }
 
       li {
-        padding: 4px 0;
-        color: #ccc;
+        padding: 8px 0;
+        border-bottom: 1px solid #222;
       }
 
-      /* MOBILE-FIRST FIX */
       @media (max-width: 768px) {
+        .console-wrap {
+          grid-template-columns: 1fr;
+        }
         .sidebar {
-          position: fixed;
-          left: 0;
-          top: 0;
-          height: 100vh;
-          width: 260px;
-
           transform: translateX(-105%);
-          transition: transform 0.25s ease;
-
-          z-index: 9999;
         }
-
-        .sidebar.active {
-          transform: translateX(0);
-        }
-
         .main {
           margin-left: 0 !important;
-          padding: 12px;
         }
-
-        .toggle-btn {
-          display: block;
-        }
-
-        /* FIX BUTTON LAYOUT */
         button {
           width: 100%;
-          margin: 6px 0;
-        }
-
-        /* FIX INPUT OVERFLOW */
-        input {
-          width: 100%;
-        }
-
-        /* STACK BUTTON GROUPS CLEANLY */
-        section {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
         }
       }
     </style>
   </head>
 
   <body>
-    <!-- SIDEBAR -->
     <div class="sidebar">
       <h2>SmartGate</h2>
       <a href="#controls">Squid Controls</a>
@@ -204,65 +184,71 @@
       <a href="#console">Console</a>
     </div>
 
-    <!-- MAIN -->
     <div class="main">
-      <!-- CONTROLS -->
       <section id="controls">
         <h2>Squid Controls</h2>
-        <div id="squidStatus" style="margin-top: 10px; font-weight: bold">
-          Status: <span id="statusText">Loading...</span>
-        </div>
-        <br />
+        Status: <span id="statusText">Loading...</span><br /><br />
         <button onclick="start()">Start</button>
         <button onclick="stop()">Stop</button>
         <button onclick="restart()">Restart</button>
         <button onclick="reload()">Reload</button>
       </section>
 
-      <!-- ACTIONS -->
       <section id="actions">
         <h2>Site Control</h2>
-
         <input id="siteInput" placeholder="example.com" />
-
         <button onclick="block()">Block</button>
         <button onclick="unblock()">Unblock</button>
         <button onclick="clearList()">Clear list</button>
       </section>
 
-      <!-- LIST -->
       <section id="lists">
         <h2>Blocked Sites</h2>
         <ul id="blockedList"></ul>
       </section>
+      <section>
+        <h2>Cache Hit Rate</h2>
 
-      <!-- CONSOLE -->
+        <button onclick="clearLogs()">Clear Log</button>
+        <button onclick="clearCache()">Clear Cache</button>
+        <div style="background: #111; border: 2px solid #fff; height: 30px">
+          <div
+            id="hitBar"
+            style="height: 100%; width: 0%; background: #00ff66"
+          ></div>
+        </div>
+        <p id="hitText">Loading...</p>
+      </section>
       <section id="console">
-        <h2>System Console</h2>
-        <div id="consoleBox" class="console"></div>
+        <h2>System & Log Console</h2>
+        <div class="console-wrap">
+          <div>
+            <h3 style="color: #ff7a00; margin-bottom: 6px">System Console</h3>
+            <div id="consoleBox" class="console"></div>
+          </div>
+          <div>
+            <h3 style="color: #ff7a00; margin-bottom: 6px">Live Access Logs</h3>
+            <div id="logConsole" class="log-console"></div>
+          </div>
+        </div>
       </section>
     </div>
 
     <script>
-      if (sessionStorage.getItem('introPlayed')) {
-        document.getElementById('introOverlay').style.display = 'none';
-      }
-
-      const video = document.getElementById('introVideo');
-
-      video.onended = () => {
-        sessionStorage.setItem('introPlayed', 'yes');
-        document.getElementById('introOverlay').style.display = 'none';
-      };
-
       function log(msg) {
         if (!msg) return;
-        document.getElementById('consoleBox').innerText += msg + '\n';
-        document.getElementById('consoleBox').scrollTop =
-          document.getElementById('consoleBox').scrollHeight;
+        let box = document.getElementById('consoleBox');
+        box.innerText += msg + '\n';
+        box.scrollTop = box.scrollHeight;
       }
 
-      /* SQUID */
+      function logAccess(msg) {
+        if (!msg) return;
+        let box = document.getElementById('logConsole');
+        box.innerText += msg + '\n';
+        box.scrollTop = box.scrollHeight;
+      }
+
       async function start() {
         let r = await fetch('/squid/start', { method: 'POST' });
         let d = await r.json();
@@ -287,37 +273,40 @@
         log(d.output || d.error);
       }
 
-      /* BLOCK */
+      async function clearLogs() {
+        let r = await fetch('/squid/clear-log', { method: 'POST' });
+        let d = await r.json();
+
+        log(d.output || d.error || 'Log cleared');
+
+        // refresh UI logs
+        streamLogs();
+      }
+
       async function block() {
         let site = document.getElementById('siteInput').value;
-
         let r = await fetch('/block', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ site }),
         });
-
         let d = await r.json();
         log(d.output || d.error);
         loadList();
       }
 
-      /* UNBLOCK */
       async function unblock() {
         let site = document.getElementById('siteInput').value;
-
         let r = await fetch('/unblock', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ site }),
         });
-
         let d = await r.json();
         log(d.output || d.error);
         loadList();
       }
 
-      /* CLEAR LIST */
       async function clearList() {
         let r = await fetch('/clear', { method: 'POST' });
         let d = await r.json();
@@ -325,21 +314,17 @@
         loadList();
       }
 
-      /* LOAD LIST */
       async function loadList() {
         let r = await fetch('/lists');
         let d = await r.json();
-
         document.getElementById('blockedList').innerHTML = d.blocked
           .map((x) => `<li>${x}</li>`)
           .join('');
       }
 
-      /* REFRESH STATUS */
       async function refreshStatus() {
         let r = await fetch('/squid/status');
         let d = await r.json();
-
         let el = document.getElementById('statusText');
 
         if (d.status === 'active') {
@@ -354,13 +339,49 @@
         }
       }
 
+      async function streamLogs() {
+        let r = await fetch('/squid/logs');
+        let logs = await r.json();
+
+        let box = document.getElementById('logConsole');
+        box.innerText = '';
+
+        logs.forEach((log) => {
+          logAccess(`${log.date}  ${log.time}  ${log.ip}  ${log.site}`);
+        });
+      }
+
+      async function clearCache() {
+        let r = await fetch('/squid/clear-cache', { method: 'POST' });
+        let d = await r.json();
+
+        log(d.output || d.error || 'Cache cleared');
+
+        // optional refresh logs/status
+        refreshStatus();
+      }
+
+      async function updateHitRate() {
+        let r = await fetch('/squid/hit-rate');
+        let d = await r.json();
+
+        let rate = d.hit_rate || 0;
+
+        document.getElementById('hitBar').style.width = rate + '%';
+        document.getElementById('hitText').innerText =
+          `Cache Hit Rate: ${rate}%`;
+      }
+
+      setInterval(updateHitRate, 1000);
+
       window.onload = function () {
         refreshStatus();
+        loadList();
+        streamLogs();
       };
 
       setInterval(refreshStatus, 3000);
-
-      loadList();
+      setInterval(streamLogs, 4000);
     </script>
   </body>
 </html>

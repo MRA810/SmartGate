@@ -1,5 +1,6 @@
 from flask import Flask, render_template, jsonify, request
 import subprocess
+from squid_parser import parse_squid_logs
 
 app = Flask(__name__)
 
@@ -16,7 +17,7 @@ UNBLOCK_SCRIPT = "/home/ashraful/Desktop/Coding_Nerdy_Stuffs/SmartGate/Scripts/a
 CLEAR_SCRIPT = "/home/ashraful/Desktop/Coding_Nerdy_Stuffs/SmartGate/Scripts/actions/reset_lists.sh"
 
 BLOCK_FILE = "/home/ashraful/Desktop/Coding_Nerdy_Stuffs/SmartGate/proxy/blocked_sites.txt"
-
+LOG_FILE = "/var/log/squid/access.log"
 LOGS = []
 
 
@@ -65,6 +66,21 @@ def reload():
     out, err = run(["bash", RELOAD_SQUID])
     return {"output": out, "error": err}
 
+# ---------------- clear_log ----------------
+import subprocess
+from flask import jsonify
+
+@app.route("/squid/clear-log", methods=["POST"])
+def clear_log():
+    try:
+        subprocess.run(
+            ["sudo", "truncate", "-s", "0", "/var/log/squid/access.log"],
+            check=True
+        )
+        return jsonify({"output": "Log cleared"})
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
 
 # ---------------- BLOCK ----------------
 @app.route("/block", methods=["POST"])
@@ -111,6 +127,54 @@ def logs():
     return jsonify({"logs": LOGS})
 
 
+# ---------------- CLEAR CACHE ----------------
+@app.route("/squid/clear-cache", methods=["POST"])
+def clear_cache():
+    try:
+        subprocess.run(["sudo", "systemctl", "stop", "squid"], check=True)
+
+        subprocess.run(["sudo", "rm", "-rf", "/var/spool/squid/*"], check=True)
+
+        subprocess.run(["sudo", "squid", "-z"], check=True)
+
+        subprocess.run(["sudo", "systemctl", "start", "squid"], check=True)
+
+        return jsonify({"output": "Cache cleared successfully"})
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+
+# ---------------- HIT RATE ----------------
+def calculate_hit_rate():
+    hits = 0
+    total = 0
+
+    with open(LOG_FILE, "r") as f:
+        for line in f:
+            parts = line.split()
+            if len(parts) < 4:
+                continue
+
+            status = parts[3]  # TCP_HIT / TCP_MISS / TCP_TUNNEL
+
+            total += 1
+
+            if "HIT" in status:
+                hits += 1
+
+    if total == 0:
+        return 0
+
+    return round((hits / total) * 100, 2)
+
+
+@app.route("/squid/hit-rate")
+def hit_rate():
+    return jsonify({
+        "hit_rate": calculate_hit_rate()
+    })
+
+
  # ---------------- REFRESH STATUS ----------------
 @app.route("/squid/status")
 def squid_status():
@@ -131,6 +195,13 @@ def squid_status():
 
     return jsonify({"status": state})
 
+
+
+
+@app.route("/squid/logs")
+def squid_logs():
+    data = parse_squid_logs()
+    return jsonify(data)
 
 if __name__ == "__main__":
     app.run(debug=True)
