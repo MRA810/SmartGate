@@ -3,405 +3,1485 @@
   <head>
     <meta charset="UTF-8" />
     <title>SmartGate Proxy Dashboard</title>
-
     <style>
       :root {
-        --bg: #000000;
-        --surface-1: #000000;
-        --surface-2: #050505;
-        --border: #444444;
-        --text-primary: #ffffff;
-        --text-secondary: #ffffff;
-        --accent: #ff7a00;
-        --accent-strong: #ffffff;
-        --success: #00ff66;
+        --orange: #ff7a00;
+        --orange-dim: #cc6200;
+        --orange-glow: #ff9a33;
+        --gray-900: #0d0d0d;
+        --gray-850: #111111;
+        --gray-800: #161616;
+        --gray-700: #1e1e1e;
+        --gray-600: #2a2a2a;
+        --gray-500: #3a3a3a;
+        --gray-400: #555555;
+        --gray-300: #888888;
+        --gray-200: #bbbbbb;
+        --gray-100: #e8e8e8;
+        --white: #ffffff;
+        --green: #00e676;
+        --red: #ff3d3d;
+        --font: 'Segoe UI', system-ui, sans-serif;
       }
-
-      * {
+      *,
+      *::before,
+      *::after {
         margin: 0;
         padding: 0;
         box-sizing: border-box;
-        font-family: Arial, sans-serif;
       }
-
       body {
-        background: var(--bg);
-        color: var(--text-primary);
+        background: var(--gray-900);
+        color: var(--gray-100);
+        font-family: var(--font);
         min-height: 100vh;
         overflow-x: hidden;
       }
 
+      /* ── SIDEBAR ── */
       .sidebar {
         position: fixed;
         top: 0;
         left: 0;
-        width: 230px;
+        width: 220px;
         height: 100vh;
-        background: var(--surface-1);
-        border-right: 4px solid var(--accent);
-        padding-top: 20px;
+        background: var(--gray-850);
+        border-right: 1px solid var(--gray-600);
+        display: flex;
+        flex-direction: column;
         z-index: 1000;
       }
-
-      .sidebar h2 {
-        color: var(--accent);
-        text-align: center;
-        margin-bottom: 25px;
+      .sidebar-logo {
+        padding: 24px 20px 18px;
+        border-bottom: 1px solid var(--gray-600);
+      }
+      .wordmark {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .logo-icon {
+        width: 32px;
+        height: 32px;
+        background: var(--orange);
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .logo-icon svg {
+        width: 16px;
+        height: 16px;
+      }
+      .logo-text {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--white);
+      }
+      .logo-sub {
+        font-size: 10px;
+        color: var(--gray-300);
+        margin-top: 2px;
         letter-spacing: 1px;
-        font-weight: 900;
+        text-transform: uppercase;
       }
-
+      .sidebar nav {
+        padding: 12px 0;
+        flex: 1;
+      }
+      .nav-label {
+        font-size: 10px;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        color: var(--gray-400);
+        padding: 10px 18px 5px;
+        font-weight: 600;
+      }
       .sidebar a {
-        display: block;
-        padding: 14px 22px;
-        color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding: 9px 18px;
+        color: var(--gray-300);
         text-decoration: none;
-        border-left: 4px solid transparent;
-        transition: 0.1s;
-        font-weight: bold;
+        font-size: 13px;
+        font-weight: 500;
+        border-left: 3px solid transparent;
+        transition: all 0.15s;
       }
-
+      .sidebar a svg {
+        width: 14px;
+        height: 14px;
+        opacity: 0.6;
+        flex-shrink: 0;
+      }
       .sidebar a:hover {
-        background: var(--accent);
-        color: #000;
-        border-left: 4px solid #fff;
+        color: var(--white);
+        background: linear-gradient(
+          to right,
+          rgba(255, 122, 0, 0.08),
+          transparent
+        );
+        border-left-color: var(--orange);
+      }
+      .sidebar a:hover svg {
+        opacity: 1;
+      }
+      .sidebar-footer {
+        padding: 14px 18px;
+        border-top: 1px solid var(--gray-600);
+        font-size: 11px;
+        color: var(--gray-400);
       }
 
+      /* ── MAIN ── */
       .main {
-        margin-left: 230px;
-        padding: 24px;
+        margin-left: 220px;
+        padding: 26px 26px 48px;
+        max-width: 1100px;
+      }
+      .page-header {
+        margin-bottom: 24px;
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+      }
+      .page-header h1 {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--white);
+      }
+      .page-header .subtitle {
+        font-size: 12px;
+        color: var(--gray-300);
+        margin-top: 3px;
+      }
+      .badge-live {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(0, 230, 118, 0.1);
+        border: 1px solid rgba(0, 230, 118, 0.25);
+        color: var(--green);
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .badge-live::before {
+        content: '';
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--green);
+        animation: pulse 2s infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.3;
+        }
       }
 
-      section {
-        background: var(--surface-2);
-        padding: 22px;
-        margin-bottom: 22px;
-        border: 2px solid var(--border);
-        border-left: 6px solid var(--accent);
+      /* ── STAT ROW ── */
+      .stat-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+        margin-bottom: 18px;
       }
-
-      h2 {
-        color: var(--accent);
-        margin-bottom: 12px;
+      .stat-card {
+        background: var(--gray-800);
+        border: 1px solid var(--gray-600);
+        border-radius: 10px;
+        padding: 14px 18px;
+        position: relative;
+        overflow: hidden;
+      }
+      .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: var(--orange);
+      }
+      .stat-label {
+        font-size: 10px;
+        color: var(--gray-300);
         text-transform: uppercase;
-        font-size: 1.2rem;
+        letter-spacing: 1px;
+        font-weight: 600;
+      }
+      .stat-value {
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--white);
+        margin-top: 5px;
+      }
+      .stat-sub {
+        font-size: 11px;
+        color: var(--gray-400);
+        margin-top: 2px;
       }
 
-      button {
-        background: var(--accent);
-        color: #000;
-        border: 2px solid var(--accent);
-        padding: 10px 18px;
-        margin: 6px 6px 6px 0;
+      /* ── STATUS ── */
+      .status-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 14px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 700;
+        border: 1px solid;
+      }
+      .status-indicator .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+      }
+      .status-active {
+        background: rgba(0, 230, 118, 0.08);
+        border-color: rgba(0, 230, 118, 0.3);
+        color: var(--green);
+      }
+      .status-active .dot {
+        background: var(--green);
+        animation: pulse 2s infinite;
+      }
+      .status-inactive {
+        background: rgba(255, 61, 61, 0.08);
+        border-color: rgba(255, 61, 61, 0.3);
+        color: var(--red);
+      }
+      .status-inactive .dot {
+        background: var(--red);
+      }
+      .status-unknown {
+        background: rgba(255, 122, 0, 0.08);
+        border-color: rgba(255, 122, 0, 0.3);
+        color: var(--orange);
+      }
+      .status-unknown .dot {
+        background: var(--orange);
+      }
+
+      /* ── COLLAPSIBLE CARD ── */
+      .card {
+        background: var(--gray-800);
+        border: 1px solid var(--gray-600);
+        border-radius: 12px;
+        margin-bottom: 14px;
+        overflow: hidden;
+      }
+      .card-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 15px 20px;
         cursor: pointer;
-        font-weight: 900;
-        border-radius: 0px;
-        transition: 0.1s;
+        user-select: none;
+        transition: background 0.15s;
+      }
+      .card-header:hover {
+        background: rgba(255, 122, 0, 0.04);
+      }
+      .card-icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 7px;
+        background: rgba(255, 122, 0, 0.12);
+        border: 1px solid rgba(255, 122, 0, 0.22);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .card-icon svg {
+        width: 14px;
+        height: 14px;
+      }
+      .card-titles {
+        flex: 1;
+      }
+      .card-title {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--white);
         text-transform: uppercase;
+        letter-spacing: 0.8px;
+      }
+      .card-desc {
+        font-size: 11px;
+        color: var(--gray-300);
+        margin-top: 2px;
+      }
+      .chevron {
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0;
+        transition: transform 0.22s ease;
+        color: var(--gray-400);
+      }
+      .card.collapsed .chevron {
+        transform: rotate(-90deg);
+      }
+      .card-body {
+        border-top: 1px solid var(--gray-600);
+        max-height: 700px;
+        opacity: 1;
+        transition:
+          max-height 0.28s ease,
+          opacity 0.2s ease;
+        overflow: hidden;
+      }
+      .card-body-inner {
+        padding: 16px 20px 18px;
+      }
+      .card.collapsed .card-body {
+        max-height: 0;
+        opacity: 0;
+        pointer-events: none;
       }
 
-      button:hover {
-        background: var(--accent-strong);
-        border-color: #ffffff;
+      /* ── BUTTONS ── */
+      .btn-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      button {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        font-size: 12px;
+        font-weight: 700;
+        font-family: var(--font);
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        border-radius: 7px;
+        border: 1px solid;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+      button svg {
+        width: 12px;
+        height: 12px;
+        flex-shrink: 0;
+      }
+      .btn-primary {
+        background: var(--orange);
         color: #000;
+        border-color: var(--orange);
+      }
+      .btn-primary:hover {
+        background: var(--orange-glow);
+        border-color: var(--orange-glow);
+      }
+      .btn-outline {
+        background: transparent;
+        color: var(--gray-200);
+        border-color: var(--gray-500);
+      }
+      .btn-outline:hover {
+        border-color: var(--orange);
+        color: var(--orange);
+        background: rgba(255, 122, 0, 0.06);
+      }
+      .btn-danger {
+        background: transparent;
+        color: #ff7070;
+        border-color: rgba(255, 61, 61, 0.4);
+      }
+      .btn-danger:hover {
+        background: rgba(255, 61, 61, 0.1);
+        border-color: var(--red);
+      }
+      .btn-sm {
+        padding: 5px 10px;
+        font-size: 11px;
       }
 
-      input {
-        padding: 10px;
-        background: #000;
-        color: #fff;
-        border: 2px solid #ffffff;
-        margin-right: 8px;
-        font-weight: bold;
+      /* ── INPUT ── */
+      .input-row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      input[type='text'] {
+        padding: 8px 13px;
+        background: var(--gray-700);
+        color: var(--white);
+        border: 1px solid var(--gray-500);
+        border-radius: 7px;
+        font-size: 13px;
+        font-family: var(--font);
+        min-width: 200px;
+        transition: border-color 0.15s;
+      }
+      input[type='text']:focus {
+        outline: none;
+        border-color: var(--orange);
+        box-shadow: 0 0 0 3px rgba(255, 122, 0, 0.1);
+      }
+      input[type='text']::placeholder {
+        color: var(--gray-400);
       }
 
-      input:focus {
-        outline: 3px solid var(--accent);
-        border-color: var(--accent);
+      /* ── BLOCKED LIST ── */
+      .blocked-list {
+        background: var(--gray-700);
+        border-radius: 8px;
+        border: 1px solid var(--gray-600);
+        overflow: hidden;
+      }
+      #blockedList {
+        list-style: none;
+      }
+      #blockedList li {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 9px 14px;
+        border-bottom: 1px solid var(--gray-600);
+        font-size: 12.5px;
+        color: var(--gray-200);
+      }
+      #blockedList li:last-child {
+        border-bottom: none;
+      }
+      #blockedList li::before {
+        content: '';
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--orange);
+        flex-shrink: 0;
       }
 
-      .console-wrap {
+      /* ── CACHE BAR ── */
+      .cache-bar-wrap {
+        background: var(--gray-700);
+        border-radius: 6px;
+        height: 9px;
+        overflow: hidden;
+        border: 1px solid var(--gray-600);
+        margin-bottom: 8px;
+      }
+      #hitBar {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(
+          to right,
+          var(--orange),
+          var(--orange-glow)
+        );
+        border-radius: 6px;
+        transition: width 0.5s ease;
+      }
+      .cache-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 8px;
+      }
+      .cache-pct {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--white);
+      }
+      .cache-label {
+        font-size: 11px;
+        color: var(--gray-300);
+      }
+
+      /* ── CONSOLE ── */
+      .console-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 14px;
       }
-
+      .console-pane-label {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        color: var(--orange);
+        margin-bottom: 7px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .console-pane-label::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: var(--gray-600);
+      }
       .console,
       .log-console {
-        background: #000;
-        height: 260px;
+        background: #080808;
+        border: 1px solid var(--gray-600);
+        border-radius: 8px;
+        height: 230px;
         overflow-y: auto;
         padding: 12px;
-        font-family: 'Courier New', monospace;
-        border: 2px solid #ffffff;
+        font-family: 'Cascadia Code', 'Consolas', 'Courier New', monospace;
+        font-size: 12px;
         white-space: pre-line;
-        font-size: 0.95rem;
+        line-height: 1.6;
       }
-
       .console {
-        color: var(--success);
+        color: #6ee88a;
       }
-
       .log-console {
-        color: #ffffff;
+        color: var(--gray-200);
       }
 
-      ul {
-        list-style: none;
-        padding: 12px;
-        background: #000;
-        border: 2px solid var(--border);
+      /* ── CATEGORIES ── */
+      .cat-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 10px;
+        margin-top: 14px;
+      }
+      .cat-item {
+        background: var(--gray-700);
+        border: 1px solid var(--gray-600);
+        border-radius: 9px;
+        padding: 12px 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        transition: border-color 0.15s;
+      }
+      .cat-item:hover {
+        border-color: var(--gray-400);
+      }
+      .cat-item.enabled {
+        border-color: rgba(255, 122, 0, 0.35);
+        background: rgba(255, 122, 0, 0.05);
+      }
+      .cat-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      .cat-info {
+        flex: 1;
+        min-width: 0;
+      }
+      .cat-name {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--white);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .cat-count {
+        font-size: 11px;
+        color: var(--gray-400);
+        margin-top: 2px;
+      }
+      .cat-sites-preview {
+        font-size: 10px;
+        color: var(--gray-400);
+        margin-top: 4px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .cat-status-badge {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        padding: 3px 8px;
+        border-radius: 20px;
+        flex-shrink: 0;
+      }
+      .cat-status-badge.on {
+        background: rgba(0, 230, 118, 0.12);
+        color: var(--green);
+        border: 1px solid rgba(0, 230, 118, 0.25);
+      }
+      .cat-status-badge.off {
+        background: rgba(85, 85, 85, 0.2);
+        color: var(--gray-400);
+        border: 1px solid var(--gray-600);
+      }
+      .cat-actions {
+        display: flex;
+        gap: 6px;
+      }
+      .cat-empty {
+        padding: 20px 14px;
+        color: var(--gray-400);
+        font-size: 12.5px;
+        text-align: center;
       }
 
-      li {
-        padding: 8px 0;
-        border-bottom: 1px solid #222;
+      ::-webkit-scrollbar {
+        width: 4px;
+        height: 4px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--gray-500);
+        border-radius: 3px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--orange);
       }
 
-      @media (max-width: 768px) {
-        .console-wrap {
-          grid-template-columns: 1fr;
-        }
+      @media (max-width: 900px) {
         .sidebar {
           transform: translateX(-105%);
         }
         .main {
-          margin-left: 0 !important;
+          margin-left: 0;
+          padding: 14px;
+        }
+        .stat-row {
+          grid-template-columns: 1fr 1fr;
+        }
+        .console-grid {
+          grid-template-columns: 1fr;
+        }
+        .cat-grid {
+          grid-template-columns: 1fr;
         }
         button {
-          width: 100%;
+          flex: 1;
+          justify-content: center;
         }
       }
     </style>
   </head>
-
   <body>
     <div class="sidebar">
-      <h2>SmartGate</h2>
-      <a href="#controls">Squid Controls</a>
-      <a href="#actions">Site Control</a>
-      <a href="#lists">Blocked Sites</a>
-      <a href="#console">Console</a>
+      <div class="sidebar-logo">
+        <div class="wordmark">
+          <!--<div class="logo-icon">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#000"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2" />
+              <line x1="12" y1="22" x2="12" y2="15.5" />
+              <polyline points="22 8.5 12 15.5 2 8.5" />
+            </svg>
+          </div>-->
+          <div>
+            <div class="logo-text">SmartGate</div>
+            <div class="logo-sub">Proxy Dashboard</div>
+          </div>
+        </div>
+      </div>
+      <nav>
+        <div class="nav-label">Proxy</div>
+        <a href="#controls">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="12" cy="12" r="3" />
+            <path
+              d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"
+            />
+          </svg>
+          Squid Controls
+        </a>
+        <a href="#actions">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          </svg>
+          Site Control
+        </a>
+        <div class="nav-label">Filter</div>
+        <a href="#categories">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <rect x="2" y="3" width="20" height="14" rx="2" />
+            <line x1="8" y1="21" x2="16" y2="21" />
+            <line x1="12" y1="17" x2="12" y2="21" />
+          </svg>
+          Categories
+        </a>
+        <div class="nav-label">Monitor</div>
+        <a href="#lists">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+          </svg>
+          Blocked Sites
+        </a>
+        <a href="#cache">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+          </svg>
+          Cache Stats
+        </a>
+        <a href="#console">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="4 17 10 11 4 5" />
+            <line x1="12" y1="19" x2="20" y2="19" />
+          </svg>
+          Console
+        </a>
+      </nav>
+      <div class="sidebar-footer">v2.1 · Squid Proxy</div>
     </div>
 
     <div class="main">
-      <section id="controls">
-        <h2>Squid Controls</h2>
-        Status: <span id="statusText">Loading...</span><br /><br />
-        <button onclick="start()">Start</button>
-        <button onclick="stop()">Stop</button>
-        <button onclick="restart()">Restart</button>
-        <button onclick="reload()">Reload</button>
-      </section>
-
-      <section id="actions">
-        <h2>Site Control</h2>
-        <input id="siteInput" placeholder="example.com" />
-        <button onclick="block()">Block</button>
-        <button onclick="unblock()">Unblock</button>
-        <button onclick="clearList()">Clear list</button>
-      </section>
-
-      <section id="lists">
-        <h2>Blocked Sites</h2>
-        <ul id="blockedList"></ul>
-      </section>
-      <section>
-        <h2>Cache Hit Rate</h2>
-
-        <button onclick="clearLogs()">Clear Log</button>
-        <button onclick="clearCache()">Clear Cache</button>
-        <div style="background: #111; border: 2px solid #fff; height: 30px">
-          <div
-            id="hitBar"
-            style="height: 100%; width: 0%; background: #00ff66"
-          ></div>
+      <div class="page-header">
+        <div>
+          <h1>Proxy Dashboard</h1>
+          <div class="subtitle">Squid proxy management &amp; monitoring</div>
         </div>
-        <p id="hitText">Loading...</p>
-      </section>
-      <section id="console">
-        <h2>System & Log Console</h2>
-        <div class="console-wrap">
-          <div>
-            <h3 style="color: #ff7a00; margin-bottom: 6px">System Console</h3>
-            <div id="consoleBox" class="console"></div>
+        <div class="badge-live">Live</div>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat-card">
+          <div class="stat-label">Service Status</div>
+          <div id="statusText" style="margin-top: 8px; font-size: 13px">
+            Loading...
           </div>
-          <div>
-            <h3 style="color: #ff7a00; margin-bottom: 6px">Live Access Logs</h3>
-            <div id="logConsole" class="log-console"></div>
+          <div class="stat-sub">Squid daemon</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Cache Hit Rate</div>
+          <div class="stat-value" id="hitPct">—</div>
+          <div class="stat-sub">Served from cache</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Blocked Sites</div>
+          <div class="stat-value" id="blockedCount">—</div>
+          <div class="stat-sub">Active rules</div>
+        </div>
+      </div>
+
+      <!-- Squid Controls -->
+      <div id="controls" class="card">
+        <div class="card-header" onclick="toggleCard('controls')">
+          <div class="card-icon">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="var(--orange)"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="12" cy="12" r="3" />
+              <path
+                d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"
+              />
+            </svg>
+          </div>
+          <div class="card-titles">
+            <div class="card-title">Squid Controls</div>
+            <div class="card-desc">
+              Start, stop, and restart the proxy service
+            </div>
+          </div>
+          <svg
+            class="chevron"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </div>
+        <div class="card-body">
+          <div class="card-body-inner">
+            <div class="btn-group">
+              <button class="btn-primary" onclick="squidStart()">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <polygon points="5 3 19 12 5 21 5 3" /></svg
+                >Start
+              </button>
+              <button class="btn-outline" onclick="squidStop()">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <rect x="6" y="6" width="12" height="12" rx="1" /></svg
+                >Stop
+              </button>
+              <button class="btn-outline" onclick="squidRestart()">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="1 4 1 10 7 10" />
+                  <path d="M3.51 15a9 9 0 1 0 .49-4.55" /></svg
+                >Restart
+              </button>
+              <button class="btn-outline" onclick="squidReload()">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="23 4 23 10 17 10" />
+                  <polyline points="1 20 1 14 7 14" />
+                  <path
+                    d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"
+                  /></svg
+                >Reload Config
+              </button>
+            </div>
           </div>
         </div>
-      </section>
+      </div>
+
+      <!-- Site Control -->
+      <div id="actions" class="card">
+        <div class="card-header" onclick="toggleCard('actions')">
+          <div class="card-icon">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="var(--orange)"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+          </div>
+          <div class="card-titles">
+            <div class="card-title">Site Control</div>
+            <div class="card-desc">Block or unblock specific domains</div>
+          </div>
+          <svg
+            class="chevron"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </div>
+        <div class="card-body">
+          <div class="card-body-inner">
+            <div class="input-row">
+              <input type="text" id="siteInput" placeholder="example.com" />
+              <button class="btn-primary" onclick="blockSite()">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                >
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" /></svg
+                >Block
+              </button>
+              <button class="btn-outline" onclick="unblockSite()">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                >
+                  <line x1="5" y1="12" x2="19" y2="12" /></svg
+                >Unblock
+              </button>
+              <button class="btn-danger" onclick="clearList()">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="3 6 5 6 21 6" />
+                  <path d="M19 6l-1 14H6L5 6" />
+                  <path d="M10 11v6M14 11v6" />
+                  <path d="M9 6V4h6v2" /></svg
+                >Clear All
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Categories -->
+      <div id="categories" class="card">
+        <div class="card-header" onclick="toggleCard('categories')">
+          <div class="card-icon">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="var(--orange)"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="2" y="3" width="20" height="14" rx="2" />
+              <line x1="8" y1="21" x2="16" y2="21" />
+              <line x1="12" y1="17" x2="12" y2="21" />
+            </svg>
+          </div>
+          <div class="card-titles">
+            <div class="card-title">Categories</div>
+            <div class="card-desc">
+              Group sites into named filter categories
+            </div>
+          </div>
+          <svg
+            class="chevron"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </div>
+        <div class="card-body" style="max-height: 700px">
+          <div class="card-body-inner">
+            <div class="input-row">
+              <input
+                type="text"
+                id="catName"
+                placeholder="Category name"
+                style="min-width: 160px"
+              />
+              <input
+                type="text"
+                id="catSites"
+                placeholder="site1.com, site2.com"
+                style="min-width: 260px"
+              />
+              <button class="btn-primary" onclick="createCategory()">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                >
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" /></svg
+                >Create
+              </button>
+            </div>
+            <div id="catList" class="cat-grid"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Blocked Sites -->
+      <div id="lists" class="card">
+        <div class="card-header" onclick="toggleCard('lists')">
+          <div class="card-icon">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="var(--orange)"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+            </svg>
+          </div>
+          <div class="card-titles">
+            <div class="card-title">Blocked Sites</div>
+            <div class="card-desc">
+              Currently enforced block rules (manual + enabled categories)
+            </div>
+          </div>
+          <svg
+            class="chevron"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </div>
+        <div class="card-body">
+          <div class="card-body-inner">
+            <div class="blocked-list">
+              <ul id="blockedList">
+                <li
+                  style="
+                    color: var(--gray-400);
+                    font-size: 12.5px;
+                    padding: 18px 14px;
+                    border: none;
+                  "
+                >
+                  No blocked sites
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cache -->
+      <div id="cache" class="card">
+        <div class="card-header" onclick="toggleCard('cache')">
+          <div class="card-icon">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="var(--orange)"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+            </svg>
+          </div>
+          <div class="card-titles">
+            <div class="card-title">Cache Performance</div>
+            <div class="card-desc">Hit rate and cache management</div>
+          </div>
+          <svg
+            class="chevron"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </div>
+        <div class="card-body">
+          <div class="card-body-inner">
+            <div class="cache-meta">
+              <span class="cache-pct" id="hitText">0%</span>
+              <span class="cache-label">Cache Hit Rate</span>
+            </div>
+            <div class="cache-bar-wrap"><div id="hitBar"></div></div>
+            <div class="btn-group" style="margin-top: 12px">
+              <button class="btn-outline" onclick="clearLogs()">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path
+                    d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                  />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="9" y1="15" x2="15" y2="15" /></svg
+                >Clear Log
+              </button>
+              <button class="btn-danger" onclick="clearCache()">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="3 6 5 6 21 6" />
+                  <path d="M19 6l-1 14H6L5 6" />
+                  <path d="M9 6V4h6v2" /></svg
+                >Clear Cache
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Console -->
+      <div id="console" class="card">
+        <div class="card-header" onclick="toggleCard('console')">
+          <div class="card-icon">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="var(--orange)"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="4 17 10 11 4 5" />
+              <line x1="12" y1="19" x2="20" y2="19" />
+            </svg>
+          </div>
+          <div class="card-titles">
+            <div class="card-title">System &amp; Log Console</div>
+            <div class="card-desc">Real-time output and access logs</div>
+          </div>
+          <svg
+            class="chevron"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </div>
+        <div class="card-body" style="max-height: 700px">
+          <div class="card-body-inner">
+            <div class="console-grid">
+              <div>
+                <div class="console-pane-label">System Console</div>
+                <div id="consoleBox" class="console"></div>
+              </div>
+              <div>
+                <div class="console-pane-label">Live Access Logs</div>
+                <div id="logConsole" class="log-console"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <script>
+      /* ── UTILS ── */
+      function toggleCard(id) {
+        document.getElementById(id).classList.toggle('collapsed');
+      }
+
       function log(msg) {
         if (!msg) return;
-        let box = document.getElementById('consoleBox');
+        const box = document.getElementById('consoleBox');
         box.innerText += msg + '\n';
         box.scrollTop = box.scrollHeight;
       }
 
       function logAccess(msg) {
         if (!msg) return;
-        let box = document.getElementById('logConsole');
+        const box = document.getElementById('logConsole');
         box.innerText += msg + '\n';
         box.scrollTop = box.scrollHeight;
       }
 
-      async function start() {
-        let r = await fetch('/squid/start', { method: 'POST' });
-        let d = await r.json();
-        log(d.output || d.error);
+      async function post(url, body) {
+        const opts = { method: 'POST' };
+        if (body) {
+          opts.headers = { 'Content-Type': 'application/json' };
+          opts.body = JSON.stringify(body);
+        }
+        const r = await fetch(url, opts);
+        return r.json();
       }
 
-      async function stop() {
-        let r = await fetch('/squid/stop', { method: 'POST' });
-        let d = await r.json();
+      /* ── SQUID CONTROLS ── */
+      async function squidStart() {
+        const d = await post('/squid/start');
         log(d.output || d.error);
       }
-
-      async function restart() {
-        let r = await fetch('/squid/restart', { method: 'POST' });
-        let d = await r.json();
+      async function squidStop() {
+        const d = await post('/squid/stop');
         log(d.output || d.error);
       }
-
-      async function reload() {
-        let r = await fetch('/squid/reload', { method: 'POST' });
-        let d = await r.json();
+      async function squidRestart() {
+        const d = await post('/squid/restart');
+        log(d.output || d.error);
+      }
+      async function squidReload() {
+        const d = await post('/squid/reload');
         log(d.output || d.error);
       }
 
       async function clearLogs() {
-        let r = await fetch('/squid/clear-log', { method: 'POST' });
-        let d = await r.json();
-
+        const d = await post('/squid/clear-log');
         log(d.output || d.error || 'Log cleared');
-
-        // refresh UI logs
         streamLogs();
       }
 
-      async function block() {
-        let site = document.getElementById('siteInput').value;
-        let r = await fetch('/block', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ site }),
-        });
-        let d = await r.json();
+      async function clearCache() {
+        const d = await post('/squid/clear-cache');
+        log(d.output || d.error || 'Cache cleared');
+        refreshStatus();
+      }
+
+      /* ── SITE CONTROL ── */
+      async function blockSite() {
+        const site = document.getElementById('siteInput').value.trim();
+        if (!site) return;
+        const d = await post('/block', { site });
         log(d.output || d.error);
         loadList();
       }
 
-      async function unblock() {
-        let site = document.getElementById('siteInput').value;
-        let r = await fetch('/unblock', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ site }),
-        });
-        let d = await r.json();
+      async function unblockSite() {
+        const site = document.getElementById('siteInput').value.trim();
+        if (!site) return;
+        const d = await post('/unblock', { site });
         log(d.output || d.error);
         loadList();
       }
 
       async function clearList() {
-        let r = await fetch('/clear', { method: 'POST' });
-        let d = await r.json();
+        const d = await post('/clear');
         log(d.output || d.error);
         loadList();
       }
 
-      async function loadList() {
-        let r = await fetch('/lists');
-        let d = await r.json();
-        document.getElementById('blockedList').innerHTML = d.blocked
-          .map((x) => `<li>${x}</li>`)
+      /* ── CATEGORIES ── */
+      async function loadCategories() {
+        try {
+          const r = await fetch('/category/list');
+          const data = await r.json();
+          renderCategories(data);
+        } catch (e) {
+          renderCategories({});
+        }
+      }
+
+      function renderCategories(data) {
+        const box = document.getElementById('catList');
+        const keys = Object.keys(data);
+        if (!keys.length) {
+          box.innerHTML =
+            '<div class="cat-empty" style="grid-column:1/-1">No categories yet — create one above</div>';
+          return;
+        }
+
+        box.innerHTML = keys
+          .map((name) => {
+            const c = data[name];
+            const enabled = c.enabled || false;
+            const count = (c.sites || []).length;
+            const preview =
+              (c.sites || []).slice(0, 3).join(', ') + (count > 3 ? '…' : '');
+
+            return `
+            <div class="cat-item ${enabled ? 'enabled' : ''}" id="cat-${CSS.escape(name)}">
+              <div class="cat-top">
+                <div class="cat-info">
+                  <div class="cat-name">${name}</div>
+                  <div class="cat-count">${count} site${count !== 1 ? 's' : ''}</div>
+                  ${preview ? `<div class="cat-sites-preview">${preview}</div>` : ''}
+                </div>
+                <span class="cat-status-badge ${enabled ? 'on' : 'off'}">${enabled ? 'ON' : 'OFF'}</span>
+              </div>
+              <div class="cat-actions">
+                <button class="btn-sm ${enabled ? 'btn-danger' : 'btn-outline'}"
+                        onclick="toggleCategory('${name}')">
+                  ${
+                    enabled
+                      ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Disable'
+                      : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>Enable'
+                  }
+                </button>
+                <button class="btn-sm btn-danger" onclick="deleteCategory('${name}')">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M9 6V4h6v2"/></svg>Delete
+                </button>
+              </div>
+            </div>`;
+          })
           .join('');
       }
 
-      async function refreshStatus() {
-        let r = await fetch('/squid/status');
-        let d = await r.json();
-        let el = document.getElementById('statusText');
-
-        if (d.status === 'active') {
-          el.innerText = 'ACTIVE';
-          el.style.color = '#00ff66';
-        } else if (d.status === 'inactive') {
-          el.innerText = 'INACTIVE';
-          el.style.color = 'red';
-        } else {
-          el.innerText = 'UNKNOWN';
-          el.style.color = 'orange';
+      async function createCategory() {
+        const name = document.getElementById('catName').value.trim();
+        const raw = document.getElementById('catSites').value;
+        const sites = raw
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean);
+        if (!name) {
+          log('Category name is required');
+          return;
         }
+        const d = await post('/category/create', { name, sites });
+        log(d.output || d.error);
+        if (d.output) {
+          document.getElementById('catName').value = '';
+          document.getElementById('catSites').value = '';
+          loadCategories();
+          loadList();
+        }
+      }
+
+      async function toggleCategory(name) {
+        const d = await post('/category/toggle', { name });
+        log(d.output || d.error);
+        loadCategories();
+        loadList();
+      }
+
+      async function deleteCategory(name) {
+        if (!confirm(`Delete category "${name}"?`)) return;
+        const d = await post('/category/delete', { name });
+        log(d.output || d.error);
+        loadCategories();
+        loadList();
+      }
+
+      /* ── POLLING ── */
+      async function loadList() {
+        try {
+          const r = await fetch('/lists');
+          const d = await r.json();
+          const ul = document.getElementById('blockedList');
+          if (d.blocked && d.blocked.length) {
+            ul.innerHTML = d.blocked.map((x) => `<li>${x}</li>`).join('');
+            document.getElementById('blockedCount').innerText =
+              d.blocked.length;
+          } else {
+            ul.innerHTML =
+              '<li style="color:var(--gray-400);font-size:12.5px;padding:18px 14px;border:none;">No blocked sites</li>';
+            document.getElementById('blockedCount').innerText = '0';
+          }
+        } catch (e) {}
+      }
+
+      async function refreshStatus() {
+        try {
+          const r = await fetch('/squid/status');
+          const d = await r.json();
+          const el = document.getElementById('statusText');
+          el.className = 'status-indicator';
+          if (d.status === 'active') {
+            el.className += ' status-active';
+            el.innerHTML = '<span class="dot"></span> Active';
+          } else if (d.status === 'inactive') {
+            el.className += ' status-inactive';
+            el.innerHTML = '<span class="dot"></span> Inactive';
+          } else {
+            el.className += ' status-unknown';
+            el.innerHTML = '<span class="dot"></span> Unknown';
+          }
+        } catch (e) {}
       }
 
       async function streamLogs() {
-        let r = await fetch('/squid/logs');
-        let logs = await r.json();
-
-        let box = document.getElementById('logConsole');
-        box.innerText = '';
-
-        logs.forEach((log) => {
-          logAccess(`${log.date}  ${log.time}  ${log.ip}  ${log.site}`);
-        });
-      }
-
-      async function clearCache() {
-        let r = await fetch('/squid/clear-cache', { method: 'POST' });
-        let d = await r.json();
-
-        log(d.output || d.error || 'Cache cleared');
-
-        // optional refresh logs/status
-        refreshStatus();
+        try {
+          const r = await fetch('/squid/logs');
+          const logs = await r.json();
+          const box = document.getElementById('logConsole');
+          box.innerText = '';
+          logs.forEach((l) =>
+            logAccess(`${l.date}  ${l.time}  ${l.ip}  ${l.site}`),
+          );
+        } catch (e) {}
       }
 
       let lastShown = '';
-
       async function streamCronLogs() {
-        let r = await fetch('/squid/cron-log');
-        let d = await r.json();
-
-        if (!d.last) return;
-
-        // show ONLY new event
-        if (d.last !== lastShown) {
+        try {
+          const r = await fetch('/squid/cron-log');
+          const d = await r.json();
+          if (!d.last || d.last === lastShown) return;
           lastShown = d.last;
-
-          let box = document.getElementById('consoleBox');
+          const box = document.getElementById('consoleBox');
           box.innerText += d.last + '\n';
-
           box.scrollTop = box.scrollHeight;
-        }
+        } catch (e) {}
       }
 
       async function updateHitRate() {
-        let r = await fetch('/squid/hit-rate');
-        let d = await r.json();
-
-        let rate = d.hit_rate || 0;
-
-        document.getElementById('hitBar').style.width = rate + '%';
-        document.getElementById('hitText').innerText =
-          `Cache Hit Rate: ${rate}%`;
+        try {
+          const r = await fetch('/squid/hit-rate');
+          const d = await r.json();
+          const rate = d.hit_rate || 0;
+          document.getElementById('hitBar').style.width = rate + '%';
+          document.getElementById('hitText').innerText = rate + '%';
+          document.getElementById('hitPct').innerText = rate + '%';
+        } catch (e) {}
       }
 
-      setInterval(updateHitRate, 1000);
-
+      /* ── INIT ── */
       window.onload = function () {
         refreshStatus();
         loadList();
         streamLogs();
+        loadCategories();
+        updateHitRate();
       };
-
       setInterval(refreshStatus, 3000);
       setInterval(streamLogs, 4000);
       setInterval(streamCronLogs, 3000);
+      setInterval(updateHitRate, 5000);
     </script>
   </body>
 </html>
