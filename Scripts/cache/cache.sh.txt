@@ -1,2 +1,0 @@
-sudo awk '{print $4}' /var/log/squid/readable.log | sort -u > urls.txt
-wget -i urls.txt

@@ -361,6 +361,25 @@
         refreshStatus();
       }
 
+      let lastShown = '';
+
+      async function streamCronLogs() {
+        let r = await fetch('/squid/cron-log');
+        let d = await r.json();
+
+        if (!d.last) return;
+
+        // show ONLY new event
+        if (d.last !== lastShown) {
+          lastShown = d.last;
+
+          let box = document.getElementById('consoleBox');
+          box.innerText += d.last + '\n';
+
+          box.scrollTop = box.scrollHeight;
+        }
+      }
+
       async function updateHitRate() {
         let r = await fetch('/squid/hit-rate');
         let d = await r.json();
@@ -382,6 +401,7 @@
 
       setInterval(refreshStatus, 3000);
       setInterval(streamLogs, 4000);
+      setInterval(streamCronLogs, 3000);
     </script>
   </body>
 </html>

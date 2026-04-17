@@ -135,11 +135,25 @@ def clear_cache():
 
         subprocess.run(["sudo", "rm", "-rf", "/var/spool/squid/*"], check=True)
 
+        subprocess.run(["sudo", "rm", "-rf", "/var/spool/squid/00/*"], check=False)
+
         subprocess.run(["sudo", "squid", "-z"], check=True)
 
         subprocess.run(["sudo", "systemctl", "start", "squid"], check=True)
 
         return jsonify({"output": "Cache cleared successfully"})
+
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+# ---------------- CRON LOG ----------------
+@app.route("/squid/cron-log")
+def cron_log():
+    try:
+        with open("/var/log/squid/cron.log", "r") as f:
+            lines = f.readlines()
+
+        return jsonify({"last": lines[-1] if lines else ""})
     except Exception as e:
         return jsonify({"error": str(e)})
 
@@ -150,22 +164,20 @@ def calculate_hit_rate():
     total = 0
 
     with open(LOG_FILE, "r") as f:
-        for line in f:
-            parts = line.split()
-            if len(parts) < 4:
-                continue
+        lines = f.readlines()[-1000:]  # only recent activity
 
-            status = parts[3]  # TCP_HIT / TCP_MISS / TCP_TUNNEL
+    for line in lines:
+        parts = line.split()
+        if len(parts) < 4:
+            continue
 
-            total += 1
+        status = parts[3]
 
-            if "HIT" in status:
-                hits += 1
+        total += 1
+        if "HIT" in status:
+            hits += 1
 
-    if total == 0:
-        return 0
-
-    return round((hits / total) * 100, 2)
+    return round((hits / total) * 100, 2) if total else 0
 
 
 @app.route("/squid/hit-rate")
