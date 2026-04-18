@@ -131,10 +131,8 @@ Squid is configured via `squid.conf` to read its ACL rules from the flat text fi
 
 ```squid
 acl blocked_sites dstdomain "/etc/squid/blocked_sites.txt"
-acl whitelist     dstdomain "/etc/squid/whitelist.txt"
 
 http_access deny  blocked_sites
-http_access allow whitelist
 ```
 
 When a shell script updates one of these files and calls `squid -k reconfigure`, Squid picks up the new entries without a full restart.
@@ -184,7 +182,7 @@ SmartGate uses a crontab job to automatically clear the Squid cache every 24 hou
 Add the following entry to your crontab with `crontab -e`:
 
 ```cron
-0 0 * * * /bin/bash /path/to/SmartGate/Scripts/cache/clear_cache.sh >> /var/log/smartgate_cache.log 2>&1
+00 20 * * * /home/ashraful/Desktop/Coding_Nerdy_Stuffs/SmartGate/Scripts/cache/clear_cache.sh
 ```
 
 This runs `clear_cache.sh` at **midnight every day**. Output is logged to `/var/log/smartgate_cache.log` for auditing.
@@ -256,7 +254,7 @@ crontab -l
    ```bash
    crontab -e
    # Add the following line:
-   # 0 0 * * * /bin/bash /path/to/SmartGate/Scripts/cache/clear_cache.sh >> /var/log/smartgate_cache.log 2>&1
+   # 00 20 * * * /home/ashraful/Desktop/Coding_Nerdy_Stuffs/SmartGate/Scripts/cache/clear_cache.sh
    ```
 
 7. **Start the Flask dashboard**
