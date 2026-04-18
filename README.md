@@ -1,39 +1,47 @@
 # 🛡️ SmartGate
 
-**SmartGate** is a full-featured, Linux-based network gateway management system built around [Squid Proxy](http://www.squid-cache.org/). It combines transparent web filtering, time-based access control, DHCP enforcement, firewall lockdown, a Flask web dashboard, and automated reporting — all deployable on a single Ubuntu gateway machine.
+**SmartGate** is a web-based admin dashboard for managing and controlling a **Squid proxy server** through a clean UI — no terminal required. Admins can block/unblock sites, manage access lists, control the Squid service, and clear the cache, all from a browser interface. The dashboard is powered by a **Flask** backend that executes shell scripts on the server, and a **crontab** job handles automatic cache clearing every 24 hours.
 
 ---
 
-## ✅ Features
+## 📋 Table of Contents
 
-| # | Feature | Status |
-|---|---------|--------|
-| 1 | Squid proxy setup | ✅ Done |
-| 2 | ACL site blocking | ✅ Done |
-| 3 | Time-based blocking (8 AM–4 PM) | ✅ Done |
-| 4 | Detailed logging | ✅ Done |
-| 5 | Caching (4 GB disk, 512 MB memory) | ✅ Done |
-| 6 | DHCP enforcement (dnsmasq + WPAD) | ✅ Done |
-| 7 | Gateway lockdown (UFW + iptables) | ✅ Done |
-| 8 | Web dashboard (Flask) | ✅ Done |
-| 9 | Auto reports (PDF + Excel, cron) | ✅ Done |
-| 10 | Backup & restore | ✅ Done |
-| 11 | Category-based blocking | ✅ Done |
-| 12 | Testing & monitoring | ✅ Done |
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Architecture Overview](#architecture-overview)
+- [Shell Scripts](#shell-scripts)
+- [Crontab Integration](#crontab-integration)
+- [Getting Started](#getting-started)
+- [Usage](#usage)
+- [Squid Configuration](#squid-configuration)
+- [Requirements](#requirements)
+- [Contributing](#contributing)
+
+---
+
+## ✨ Features
+
+- **Block Sites** — Add domains to Squid's blocklist instantly via the UI
+- **Unblock Sites** — Remove domains from the blocklist with a single click
+- **Start / Stop / Restart / Reload Squid** — Control the Squid service lifecycle from the dashboard
+- **Clear Cache** — Flush Squid's disk cache on demand
+- **Reset Lists** — Restore allow/block lists to their default state
+- **Live Squid Log Parsing** — `squid_parser.py` reads and surfaces Squid access logs in the dashboard
+- **Automated Cache Clearing** — A crontab job automatically clears the cache every 24 hours
 
 ---
 
 ## 🧰 Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| **OS** | Ubuntu 26 LTS |
-| **Proxy** | Squid |
-| **Firewall** | UFW / iptables |
-| **DHCP** | dnsmasq |
-| **Dashboard** | Flask + Chart.js |
-| **Reports** | ReportLab (PDF) + openpyxl (Excel) |
-| **Scheduler** | cron |
+| Layer        | Technology                 |
+| ------------ | -------------------------- |
+| Frontend     | HTML, CSS                  |
+| Backend      | Python, Flask              |
+| Log Parsing  | Python (`squid_parser.py`) |
+| Proxy Engine | Squid Proxy Server         |
+| Automation   | Bash Shell Scripts         |
+| Scheduling   | Crontab                    |
 
 ---
 
@@ -41,261 +49,279 @@
 
 ```
 SmartGate/
-├── Squid Settings/        # Squid proxy configuration files (squid.conf, ACL lists)
-├── block_site.sh          # Block a website via Squid ACL
-├── unblock_site.sh        # Remove a website from the blocklist
-├── clear_cache.sh         # Clear Squid's disk and memory cache
-├── reload_squid.sh        # Reload Squid config without full restart
-├── restart_squid.sh       # Fully restart the Squid service
-├── start_squid.sh         # Start the Squid proxy service
-└── reset_lists.sh         # Reset all block/allow lists to defaults
+├── dashboard/                        # Flask web application
+│   ├── app.py                        # Flask app — routes, subprocess calls, dashboard logic
+│   ├── squid_parser.py               # Parses Squid access logs for the dashboard UI
+│   ├── requirements.txt              # Python dependencies
+│   ├── run.sh                        # Convenience script to launch the Flask app
+│   └── templates/
+│       ├── dashboard.html            # Main dashboard UI template
+│       └── CSS_color.txt             # Color reference / CSS design notes
+│
+├── proxy/                            # Squid proxy configuration & access lists
+│   ├── squid.conf.backup             # Backup of the Squid configuration file
+│   ├── blocked_sites.txt             # Domains currently allowed
+│   ├── manual_sites.txt              # Manually managed domain entries
+│   └── categories.json              # Site category definitions for grouping rules
+│
+├── Scripts/                          # Shell scripts executed by Flask via subprocess
+│   ├── actions/
+│   │   ├── block_site.sh             # Appends a domain to blocked_sites.txt & reloads Squid
+│   │   ├── unblock_site.sh           # Removes a domain from blocked_sites.txt & reloads Squid
+│   │   └── reset_lists.sh            # Resets blocked/whitelist files to defaults
+│   ├── cache/
+│   │   └── clear_cache.sh            # Stops Squid, wipes cache directory, restarts Squid
+│   └── squid_status/
+│       ├── start_squid.sh            # Starts the Squid service
+│       ├── stop_squid.sh             # Stops the Squid service
+│       ├── restart_squid.sh          # Fully restarts Squid
+│       └── reload_squid.sh           # Reloads Squid config without dropping connections
+│
+└── README.md
 ```
 
 ---
 
-## ⚙️ Prerequisites
+## 🏗️ Architecture Overview
 
-Ensure the following are installed on your Ubuntu 26 LTS gateway machine:
+SmartGate ties together three layers — the Flask dashboard, the shell scripts, and the Squid proxy — in a straightforward pipeline:
 
-```bash
-sudo apt update && sudo apt install -y \
-  squid \
-  dnsmasq \
-  ufw \
-  iptables \
-  python3 python3-pip \
-  cron
+```
+[ Admin Browser ]
+       │
+       │  HTTP request (e.g. "Block site: example.com")
+       ▼
+[ Flask — app.py ]
+       │
+       │  subprocess.run(["bash", "Scripts/actions/block_site.sh", "example.com"])
+       ▼
+[ Shell Script ]
+       │
+       │  Writes to proxy/blocked_sites.txt
+       │  Signals Squid: squid -k reconfigure
+       ▼
+[ Squid Proxy Server ]
+       │
+       │  Enforces updated ACL rules for all network traffic
+       ▼
+[ Network / Clients ]
 ```
 
-```bash
-pip3 install flask reportlab openpyxl
+### How Flask Calls the Shell Scripts
+
+Every admin action in the dashboard maps to a Flask route in `app.py`. When an action is triggered, Flask uses Python's `subprocess.run()` to execute the corresponding shell script on the server with the required arguments:
+
+```python
+# Example: blocking a site
+import subprocess
+from flask import request, redirect
+
+@app.route('/block', methods=['POST'])
+def block_site():
+    domain = request.form['domain']
+    subprocess.run(['bash', 'Scripts/actions/block_site.sh', domain], check=True)
+    return redirect('/')
 ```
 
-**Required privileges:** All scripts and services require `sudo` / root access.
+The shell script modifies the relevant file in `proxy/` (e.g. `blocked_sites.txt`) and signals Squid to reload its configuration, making the change live immediately — no full Squid restart needed for most operations.
+
+### How Squid Reads the Lists
+
+Squid is configured via `squid.conf` to read its ACL rules from the flat text files in `proxy/`:
+
+```squid
+acl blocked_sites dstdomain "/etc/squid/blocked_sites.txt"
+acl whitelist     dstdomain "/etc/squid/whitelist.txt"
+
+http_access deny  blocked_sites
+http_access allow whitelist
+```
+
+When a shell script updates one of these files and calls `squid -k reconfigure`, Squid picks up the new entries without a full restart.
+
+### Log Parsing
+
+`squid_parser.py` reads Squid's access log (typically at `/var/log/squid/access.log`), parses the raw log format into structured data, and passes it to the Flask template so admins can view live proxy traffic directly on the dashboard — without touching the terminal.
+
+---
+
+## 🐚 Shell Scripts
+
+| Script             | Location                | Description                                                 |
+| ------------------ | ----------------------- | ----------------------------------------------------------- |
+| `block_site.sh`    | `Scripts/actions/`      | Adds a domain to `blocked_sites.txt` and reloads Squid      |
+| `unblock_site.sh`  | `Scripts/actions/`      | Removes a domain from `blocked_sites.txt` and reloads Squid |
+| `reset_lists.sh`   | `Scripts/actions/`      | Resets `blocked_sites.txt` and `whitelist.txt` to defaults  |
+| `clear_cache.sh`   | `Scripts/cache/`        | Stops Squid, wipes the cache directory, restarts Squid      |
+| `start_squid.sh`   | `Scripts/squid_status/` | Starts the Squid service                                    |
+| `stop_squid.sh`    | `Scripts/squid_status/` | Stops the Squid service                                     |
+| `restart_squid.sh` | `Scripts/squid_status/` | Fully restarts Squid                                        |
+| `reload_squid.sh`  | `Scripts/squid_status/` | Reloads Squid config without dropping active connections    |
+
+---
+
+## ⏰ Crontab Integration
+
+SmartGate uses a crontab job to automatically clear the Squid cache every 24 hours, preventing the cache from growing unbounded without manual admin intervention.
+
+### How It Works
+
+```
+[ Crontab — runs at midnight daily ]
+       │
+       │  Executes: Scripts/cache/clear_cache.sh
+       ▼
+[ clear_cache.sh ]
+       │
+       ├── systemctl stop squid
+       ├── rm -rf /var/spool/squid/*   (wipes cache directory)
+       ├── squid -z                    (reinitialises cache structure)
+       └── systemctl start squid
+```
+
+### Setting Up the Cron Job
+
+Add the following entry to your crontab with `crontab -e`:
+
+```cron
+0 0 * * * /bin/bash /path/to/SmartGate/Scripts/cache/clear_cache.sh >> /var/log/smartgate_cache.log 2>&1
+```
+
+This runs `clear_cache.sh` at **midnight every day**. Output is logged to `/var/log/smartgate_cache.log` for auditing.
+
+### Verify the Cron Job Is Active
+
+```bash
+crontab -l
+```
 
 ---
 
 ## 🚀 Getting Started
 
-### 1. Clone the Repository
+### Prerequisites
 
-```bash
-git clone https://github.com/MRA810/SmartGate.git
-cd SmartGate
-```
+- Linux server (Ubuntu/Debian recommended)
+- Squid proxy installed:
+  ```bash
+  sudo apt update && sudo apt install squid -y
+  ```
+- Python 3.10+:
+  ```bash
+  sudo apt install python3 python3-pip -y
+  ```
 
-### 2. Make Scripts Executable
+### Installation
 
-```bash
-chmod +x *.sh
-```
+1. **Clone the repository**
 
-### 3. Apply Squid Configuration
+   ```bash
+   git clone https://github.com/MRA810/SmartGate.git
+   cd SmartGate
+   ```
 
-```bash
-sudo cp "Squid Settings/"* /etc/squid/
-sudo squid -k parse        # Validate config before applying
-```
+2. **Install Python dependencies**
 
-### 4. Start the Gateway
+   ```bash
+   cd dashboard
+   pip install -r requirements.txt
+   ```
 
-```bash
-sudo ./start_squid.sh
-```
+3. **Make all shell scripts executable**
 
----
+   ```bash
+   chmod +x Scripts/actions/*.sh
+   chmod +x Scripts/cache/*.sh
+   chmod +x Scripts/squid_status/*.sh
+   chmod +x dashboard/run.sh
+   ```
 
-## 📖 Script Reference
+4. **Copy proxy list files to Squid's config directory**
 
-### `block_site.sh`
-Adds a domain to the Squid ACL blocklist. Supports manual and category-based blocking.
+   ```bash
+   sudo cp proxy/blocked_sites.txt /etc/squid/
+   sudo cp proxy/whitelist.txt /etc/squid/
+   sudo cp proxy/manual_sites.txt /etc/squid/
+   ```
 
-```bash
-sudo ./block_site.sh example.com
-```
+5. **Apply your Squid configuration**
 
----
+   ```bash
+   sudo cp proxy/squid.conf.backup /etc/squid/squid.conf
+   sudo systemctl restart squid
+   ```
 
-### `unblock_site.sh`
-Removes a domain from the blocklist.
+6. **Set up the crontab for automatic cache clearing**
 
-```bash
-sudo ./unblock_site.sh example.com
-```
+   ```bash
+   crontab -e
+   # Add the following line:
+   # 0 0 * * * /bin/bash /path/to/SmartGate/Scripts/cache/clear_cache.sh >> /var/log/smartgate_cache.log 2>&1
+   ```
 
----
+7. **Start the Flask dashboard**
+   ```bash
+   cd dashboard
+   bash run.sh
+   # or: python3 app.py
+   ```
 
-### `start_squid.sh`
-Starts the Squid proxy service if it is not already running.
-
-```bash
-sudo ./start_squid.sh
-```
-
----
-
-### `reload_squid.sh`
-Reloads the Squid configuration without interrupting active connections. Run this after any ACL or config change.
-
-```bash
-sudo ./reload_squid.sh
-```
-
----
-
-### `restart_squid.sh`
-Fully restarts the Squid service. Use after major configuration changes or cache operations.
-
-```bash
-sudo ./restart_squid.sh
-```
+The dashboard will be available at `http://localhost:5000` by default.
 
 ---
 
-### `clear_cache.sh`
-Wipes Squid's cache (configured at 4 GB disk / 512 MB memory), freeing space and removing stale objects.
+## 🖥️ Usage
 
-```bash
-sudo ./clear_cache.sh
-```
+Once the dashboard is running in your browser:
 
----
-
-### `reset_lists.sh`
-Resets all block and allow lists to their default state. Useful for a clean slate or after testing.
-
-```bash
-sudo ./reset_lists.sh
-```
+- Use the **Block / Unblock** panel to manage domain access in real time
+- Use the **Service Controls** section to start, stop, restart, or reload Squid
+- Click **Clear Cache** to immediately purge cached content
+- Click **Reset Lists** to revert block/whitelist files to their defaults
+- View **live Squid traffic** parsed from the access log directly on the dashboard
 
 ---
 
-## 🔧 Feature Details
+## ⚙️ Squid Configuration
 
-### 🔒 ACL & Category-Based Blocking
-SmartGate uses Squid ACL lists to block individual domains or entire categories (e.g., social media, adult content, streaming). Domain lists are stored in flat files under `Squid Settings/` and can be updated without restarting the service.
+The `proxy/` directory holds all ACL list files that Squid reads at runtime:
 
-### ⏰ Time-Based Blocking (8 AM – 4 PM)
-Squid's `time` ACL enforces rules only during defined hours. Policies applied during working hours (08:00–16:00) are automatically lifted outside that window.
+| File                | Purpose                                     |
+| ------------------- | ------------------------------------------- |
+| `blocked_sites.txt` | Domains denied by Squid's ACL rules         |
+| `whitelist.txt`     | Domains explicitly allowed through          |
+| `manual_sites.txt`  | Manually curated domain entries             |
+| `categories.json`   | Category groupings for organising rules     |
+| `squid.conf.backup` | Reference backup of the Squid configuration |
 
-```squid
-acl working_hours time MTWHF 08:00-16:00
-http_access deny blocked_sites working_hours
-```
-
-### 📦 Caching
-SmartGate caches web content to reduce bandwidth usage:
-- **Disk cache:** 4 GB
-- **Memory cache:** 512 MB
-
-Cache behaviour is tuned in `Squid Settings/squid.conf`.
-
-### 🌐 DHCP Enforcement (dnsmasq + WPAD)
-`dnsmasq` acts as the network DHCP server and pushes a **WPAD (Web Proxy Auto-Discovery)** configuration to all clients, automatically directing their traffic through the SmartGate proxy — no manual browser configuration needed.
-
-### 🔥 Gateway Lockdown (UFW + iptables)
-Direct internet access is blocked at the OS level using UFW and iptables. All outbound HTTP/HTTPS traffic is redirected through Squid, ensuring no client can bypass the proxy.
-
-```bash
-# Example: redirect port 80 traffic through Squid
-sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 3128
-```
-
-### 📊 Web Dashboard (Flask + Chart.js)
-A browser-based dashboard provides real-time visibility into:
-- Top visited domains
-- Blocked request counts
-- Per-client traffic breakdown
-- Live Squid service status
-
-Run the dashboard:
-
-```bash
-python3 dashboard/app.py
-```
-
-Access at `http://<gateway-ip>:5000`
-
-### 📄 Automated Reports (PDF + Excel)
-SmartGate generates daily/weekly usage and blocking reports automatically via `cron`:
-- **PDF** — formatted summaries using ReportLab
-- **Excel** — raw tabular data using openpyxl
-
-Example cron entry (daily report at midnight):
-
-```cron
-0 0 * * * /usr/bin/python3 /opt/smartgate/reports/generate_report.py
-```
-
-### 💾 Backup & Restore
-Configuration and blocklists can be backed up and restored, making it easy to migrate SmartGate to a new machine or recover from misconfiguration.
-
-### 📋 Detailed Logging
-All HTTP requests are logged via Squid's native `access.log`. Logs include client IP, timestamp, URL, request status, and bytes transferred.
-
-```bash
-sudo tail -f /var/log/squid/access.log
-```
-
-### 🧪 Testing & Monitoring
-Scripts and checks are included to verify:
-- Proxy is intercepting traffic correctly
-- Blocked sites are unreachable from client machines
-- Squid service health and uptime
+Squid must be configured to reference these files in `/etc/squid/squid.conf` using `acl` directives (see [Architecture Overview](#architecture-overview)).
 
 ---
 
-## 🔄 Typical Workflow
+## 📦 Requirements
 
-```
-Start Gateway
-    └── start_squid.sh
-
-Block a site
-    └── block_site.sh <domain>
-    └── reload_squid.sh
-
-Unblock a site
-    └── unblock_site.sh <domain>
-    └── reload_squid.sh
-
-Clear cache
-    └── clear_cache.sh → restart_squid.sh
-
-Reset everything
-    └── reset_lists.sh → restart_squid.sh
-
-View reports
-    └── Open Flask dashboard at http://<gateway-ip>:5000
-    └── Check /reports/ folder for PDF/Excel files
-```
-
----
-
-## 🛠️ Troubleshooting
-
-| Issue | Solution |
-|---|---|
-| Squid fails to start | Run `sudo squid -k parse` to check for config errors |
-| Site still accessible after blocking | Run `./reload_squid.sh` or `./restart_squid.sh` |
-| Cache not clearing | Stop Squid first, then run `./clear_cache.sh` |
-| Clients not using proxy | Check dnsmasq WPAD config and iptables redirect rules |
-| Dashboard not loading | Ensure Flask is running: `python3 dashboard/app.py` |
-| Reports not generating | Check cron logs: `grep CRON /var/log/syslog` |
-| Permission denied | Ensure scripts are run with `sudo` |
-
----
-
-## 📄 License
-
-This project is open-source. See the repository for details.
+| Requirement | Version                    |
+| ----------- | -------------------------- |
+| Python      | 3.10+                      |
+| Flask       | See `requirements.txt`     |
+| Squid       | 4.x or higher              |
+| Bash        | 4.x or higher              |
+| OS          | Ubuntu 20.04+ / Debian 10+ |
 
 ---
 
 ## 🤝 Contributing
 
-Pull requests and suggestions are welcome. Please open an issue first to discuss any major changes.
+Contributions are welcome! To contribute:
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/your-feature`
+3. Commit your changes: `git commit -m "Add your feature"`
+4. Push to the branch: `git push origin feature/your-feature`
+5. Open a Pull Request
+
+Please make sure any new shell scripts are well-commented and tested before submitting.
 
 ---
 
-> **SmartGate** — Enterprise-grade network access control, simplified.
+> **SmartGate** — Putting proxy control in the hands of admins, not the terminal.
