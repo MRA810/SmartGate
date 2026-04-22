@@ -1,8 +1,6 @@
 from flask import Flask, render_template, jsonify, request
-import subprocess
-import os
-import json
-from squid_parser import parse_squid_logs
+import subprocess, time, os, json
+from squid_parser import parse_squid_logs, calculate_hit_rate
 
 app = Flask(__name__)
 
@@ -14,18 +12,19 @@ STOP_SQUID    = f"{BASE_SQUID}/stop_squid.sh"
 RESTART_SQUID = f"{BASE_SQUID}/restart_squid.sh"
 RELOAD_SQUID  = f"{BASE_SQUID}/reload_squid.sh"
 
-BLOCK_SCRIPT  = "/home/ashraful/Desktop/Coding_Nerdy_Stuffs/SmartGate/Scripts/actions/block_site.sh"
-UNBLOCK_SCRIPT= "/home/ashraful/Desktop/Coding_Nerdy_Stuffs/SmartGate/Scripts/actions/unblock_site.sh"
-CLEAR_SCRIPT  = "/home/ashraful/Desktop/Coding_Nerdy_Stuffs/SmartGate/Scripts/actions/reset_lists.sh"
+BLOCK_SCRIPT   = "/home/ashraful/Desktop/Coding_Nerdy_Stuffs/SmartGate/Scripts/actions/block_site.sh"
+UNBLOCK_SCRIPT = "/home/ashraful/Desktop/Coding_Nerdy_Stuffs/SmartGate/Scripts/actions/unblock_site.sh"
+CLEAR_SCRIPT   = "/home/ashraful/Desktop/Coding_Nerdy_Stuffs/SmartGate/Scripts/actions/reset_lists.sh"
 
-# blocked_sites.txt  →  manual entries live here AND category entries are merged in
 BLOCK_FILE    = "/home/ashraful/Desktop/Coding_Nerdy_Stuffs/SmartGate/proxy/blocked_sites.txt"
-# manual_sites.txt   →  source-of-truth for sites the user added manually (never touched by categories)
 MANUAL_FILE   = "/home/ashraful/Desktop/Coding_Nerdy_Stuffs/SmartGate/proxy/manual_sites.txt"
 CATEGORY_FILE = "/home/ashraful/Desktop/Coding_Nerdy_Stuffs/SmartGate/proxy/categories.json"
 
 LOG_FILE = "/var/log/squid/access.log"
-LOGS = []
+CONSOLE_LOGS = [] 
+
+SCRIPT = "/home/ashraful/Desktop/Coding_Nerdy_Stuffs/SmartGate/Scripts/cache/clear_cache.sh"
+
 
 # ---------------- HELPERS ----------------
 def run(cmd):
@@ -33,17 +32,32 @@ def run(cmd):
     out = result.stdout.strip()
     err = result.stderr.strip()
     if out:
-        LOGS.append(out)
+        CONSOLE_LOGS.append(out)
     if err:
-        LOGS.append("ERROR: " + err)
+        CONSOLE_LOGS.append("ERROR: " + err)
     return out, err
 
 
-# ---------------- MANUAL SITES (source-of-truth) ----------------
+def _log_error_response(exc, context=""):
+    """Build a consistent JSON error body from an exception."""
+    if isinstance(exc, PermissionError):
+        msg = (
+            f"Permission denied reading {LOG_FILE}. "
+            "Fix with:  sudo chmod o+r /var/log/squid/access.log  "
+            "and:  sudo chmod o+x /var/log/squid/"
+        )
+    elif isinstance(exc, FileNotFoundError):
+        msg = f"{LOG_FILE} not found — is Squid running?"
+    else:
+        msg = str(exc)
+    if context:
+        msg = f"[{context}] {msg}"
+    return msg
+
+
+# ---------------- MANUAL SITES ----------------
 def load_manual_sites():
-    """Return the list of manually-blocked sites (from manual_sites.txt)."""
     if not os.path.exists(MANUAL_FILE):
-        # First run: seed from existing blocked_sites.txt so nothing is lost
         try:
             with open(BLOCK_FILE) as f:
                 sites = [x.strip() for x in f if x.strip()]
@@ -65,7 +79,7 @@ def save_manual_sites(sites):
             f.write(s + "\n")
 
 
-# ---------------- CATEGORY SYSTEM ----------------
+# ---------------- CATEGORIES ----------------
 def load_categories():
     if not os.path.exists(CATEGORY_FILE):
         return {}
@@ -82,15 +96,9 @@ def save_categories(data):
         json.dump(data, f, indent=2)
 
 
-# ---------------- CORE: rebuild_blocklist ----------------
+# ---------------- REBUILD BLOCKLIST ----------------
 def rebuild_blocklist():
-    """
-    Merge manual_sites.txt  +  all *enabled* category sites
-    → write the result to blocked_sites.txt
-    → reload squid
-    This is the single source of truth writer.
-    """
-    manual   = set(load_manual_sites())
+    manual    = set(load_manual_sites())
     cat_sites = set()
     for cat in load_categories().values():
         if cat.get("enabled"):
@@ -133,7 +141,7 @@ def restart():
 
 
 @app.route("/squid/reload", methods=["POST"])
-def reload():
+def reload_config():
     out, err = run(["bash", RELOAD_SQUID])
     return jsonify({"output": out, "error": err})
 
@@ -142,10 +150,12 @@ def reload():
 @app.route("/squid/clear-log", methods=["POST"])
 def clear_log():
     try:
-        subprocess.run(["sudo", "truncate", "-s", "0", "/var/log/squid/access.log"], check=True)
+        subprocess.run(
+            ["sudo", "truncate", "-s", "0", LOG_FILE], check=True
+        )
         return jsonify({"output": "Log cleared"})
     except Exception as e:
-        return jsonify({"error": str(e)})
+        return jsonify({"error": str(e)}), 500
 
 
 # ---------------- MANUAL BLOCK / UNBLOCK ----------------
@@ -153,7 +163,7 @@ def clear_log():
 def block():
     site = request.json.get("site", "").strip()
     if not site:
-        return jsonify({"error": "No site provided"})
+        return jsonify({"error": "No site provided"}), 400
     manual = load_manual_sites()
     if site not in manual:
         manual.append(site)
@@ -166,9 +176,8 @@ def block():
 def unblock():
     site = request.json.get("site", "").strip()
     if not site:
-        return jsonify({"error": "No site provided"})
-    manual = load_manual_sites()
-    manual = [s for s in manual if s != site]
+        return jsonify({"error": "No site provided"}), 400
+    manual = [s for s in load_manual_sites() if s != site]
     save_manual_sites(manual)
     rebuild_blocklist()
     return jsonify({"output": f"Unblocked {site}"})
@@ -176,13 +185,12 @@ def unblock():
 
 @app.route("/clear", methods=["POST"])
 def clear():
-    """Clear ALL manual blocks (category blocks are untouched)."""
     save_manual_sites([])
     rebuild_blocklist()
     return jsonify({"output": "All manual blocks cleared"})
 
 
-# ---------------- BLOCK LIST (what squid is actually enforcing) ----------------
+# ---------------- BLOCK LIST ----------------
 @app.route("/lists")
 def lists():
     try:
@@ -196,17 +204,14 @@ def lists():
 # ---------------- CATEGORY APIs ----------------
 @app.route("/category/create", methods=["POST"])
 def create_category():
-    data = request.json
+    data  = request.json
     name  = data.get("name", "").strip()
     sites = [s.strip() for s in data.get("sites", []) if s.strip()]
-
     if not name:
-        return jsonify({"error": "Category name is required"})
-
+        return jsonify({"error": "Category name is required"}), 400
     categories = load_categories()
     if name in categories:
-        return jsonify({"error": "Category already exists"})
-
+        return jsonify({"error": "Category already exists"}), 409
     categories[name] = {"enabled": False, "sites": sites}
     save_categories(categories)
     return jsonify({"output": f"Category '{name}' created"})
@@ -214,31 +219,23 @@ def create_category():
 
 @app.route("/category/toggle", methods=["POST"])
 def toggle_category():
-    data = request.json
-    name = data.get("name", "").strip()
-
+    name = request.json.get("name", "").strip()
     categories = load_categories()
     if name not in categories:
-        return jsonify({"error": "Category not found"})
-
-    # Flip the enabled state
+        return jsonify({"error": "Category not found"}), 404
     categories[name]["enabled"] = not categories[name].get("enabled", False)
     save_categories(categories)
     rebuild_blocklist()
-
     state = "enabled" if categories[name]["enabled"] else "disabled"
     return jsonify({"output": f"Category '{name}' {state}", "enabled": categories[name]["enabled"]})
 
 
 @app.route("/category/delete", methods=["POST"])
 def delete_category():
-    data = request.json
-    name = data.get("name", "").strip()
-
+    name = request.json.get("name", "").strip()
     categories = load_categories()
     if name not in categories:
-        return jsonify({"error": "Category not found"})
-
+        return jsonify({"error": "Category not found"}), 404
     del categories[name]
     save_categories(categories)
     rebuild_blocklist()
@@ -250,7 +247,7 @@ def list_categories():
     return jsonify(load_categories())
 
 
-# ---------------- LEGACY SYNC ENDPOINT (kept for compatibility) ----------------
+# ---------------- LEGACY COMPAT ----------------
 @app.route("/squid/sync-categories", methods=["POST"])
 def sync_categories():
     rebuild_blocklist()
@@ -260,7 +257,7 @@ def sync_categories():
 # ---------------- CONSOLE LOGS ----------------
 @app.route("/logs")
 def logs():
-    return jsonify({"logs": LOGS})
+    return jsonify({"logs": CONSOLE_LOGS})
 
 
 # ---------------- CACHE ----------------
@@ -281,50 +278,50 @@ def clear_cache():
 def cron_log():
     try:
         with open("/var/log/squid/cron.log") as f:
-            lines = f.readlines()
-        return jsonify({"last": lines[-1] if lines else ""})
+            lines = [l for l in f.readlines() if l.strip()]
+        return jsonify({"last": lines[-1].strip() if lines else ""})
+    except FileNotFoundError:
+        return jsonify({"last": ""})
     except Exception as e:
-        return jsonify({"error": str(e)})
+        return jsonify({"error": str(e)}), 500
 
 
 # ---------------- HIT RATE ----------------
-def calculate_hit_rate():
-    hits = total = 0
-    try:
-        with open(LOG_FILE) as f:
-            lines = f.readlines()[-1000:]
-    except Exception:
-        return 0
-    for line in lines:
-        parts = line.split()
-        if len(parts) < 4:
-            continue
-        total += 1
-        if "HIT" in parts[3]:
-            hits += 1
-    return round((hits / total) * 100, 2) if total else 0
-
-
 @app.route("/squid/hit-rate")
 def hit_rate():
-    return jsonify({"hit_rate": calculate_hit_rate()})
+    try:
+        return jsonify(calculate_hit_rate())
+    except PermissionError as e:
+        return jsonify({"error": _log_error_response(e, "hit-rate"), "hit_rate": 0, "cacheable_total": 0}), 200
+    except FileNotFoundError as e:
+        return jsonify({"error": _log_error_response(e, "hit-rate"), "hit_rate": 0, "cacheable_total": 0}), 200
+    except Exception as e:
+        return jsonify({"error": str(e), "hit_rate": 0, "cacheable_total": 0}), 200
 
 
 # ---------------- STATUS ----------------
 @app.route("/squid/status")
 def squid_status():
-    result = subprocess.run(["systemctl", "is-active", "squid"], capture_output=True, text=True)
+    result = subprocess.run(
+        ["systemctl", "is-active", "squid"], capture_output=True, text=True
+    )
     status = result.stdout.strip()
     state  = "active" if status == "active" else ("inactive" if status == "inactive" else "unknown")
     return jsonify({"status": state})
 
 
-# ---------------- PARSED LOGS ----------------
+# ---------------- PARSED ACCESS LOGS ----------------
 @app.route("/squid/logs")
 def squid_logs():
-    data = parse_squid_logs()
-    return jsonify(data)
+    try:
+        return jsonify(parse_squid_logs())
+    except PermissionError as e:
+        return jsonify({"error": _log_error_response(e, "logs")}), 500
+    except FileNotFoundError as e:
+        return jsonify({"error": _log_error_response(e, "logs")}), 500
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, host="0.0.0.0", port=5000)
