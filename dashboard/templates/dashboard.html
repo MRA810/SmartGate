@@ -556,6 +556,9 @@
         border-radius: 8px;
         border: 1px solid var(--gray-600);
         overflow: hidden;
+        /* ── SCROLLABLE after ~320px (~8 items) ── */
+        max-height: 320px;
+        overflow-y: auto;
       }
       #blockedList {
         list-style: none;
@@ -750,6 +753,10 @@
         grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
         gap: 10px;
         margin-top: 14px;
+        /* ── SCROLLABLE after ~460px (~2 rows) ── */
+        max-height: 460px;
+        overflow-y: auto;
+        padding-right: 4px; /* breathing room next to scrollbar */
       }
       .cat-item {
         background: var(--gray-700);
@@ -1239,6 +1246,7 @@
                 >Create
               </button>
             </div>
+            <!-- cat-grid now has max-height + overflow-y: auto via CSS -->
             <div id="catList" class="cat-grid"></div>
           </div>
         </div>
@@ -1280,6 +1288,7 @@
         </div>
         <div class="card-body">
           <div class="card-body-inner">
+            <!-- blocked-list now has max-height + overflow-y: auto via CSS -->
             <div class="blocked-list">
               <ul id="blockedList">
                 <li
